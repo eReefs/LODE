@@ -9,7 +9,7 @@
   </target>
   <target name="compile" depends="clean">
     <mkdir dir="content/WEB-INF/classes" />
-    <javac destdir="content/WEB-INF/classes" srcdir="src" includeantruntime="false">
+    <javac destdir="content/WEB-INF/classes" srcdir="src" includeantruntime="false" debug="true">
       <classpath>
         <fileset dir="content/WEB-INF/lib">
           <include name="*" />
