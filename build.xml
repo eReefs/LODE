@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project basedir="." default="build" name="LODE">
+  <property environment="env"/>
+  <property name="env.SERVLET_DIR" value="/usr/share/tomcat7/lib"/>
+  <property name="env.SERVLET_JAR" value="servlet-api.jar"/>
+  <property name="env.WARFILE" value="out/LODE-snapshot.war"/>
+  <target name="clean">
+    <delete dir="content/WEB-INF/classes" />
+  </target>
+  <target name="compile" depends="clean">
+    <mkdir dir="content/WEB-INF/classes" />
+    <javac destdir="content/WEB-INF/classes" srcdir="src" includeantruntime="false">
+      <classpath>
+        <fileset dir="content/WEB-INF/lib">
+          <include name="*" />
+        </fileset>
+        <fileset dir="${env.SERVLET_DIR}">
+          <include name="${env.SERVLET_JAR}"/>
+        </fileset>
+      </classpath>
+    </javac>
+    <copy todir="content/WEB-INF/classes">
+      <fileset dir="src">
+        <include name="**/*.properties" />
+        <include name="**/*.xml" />
+      </fileset>
+    </copy>
+  </target>
+  <target name="war" depends="compile">
+    <war basedir="content" destfile="${env.WARFILE}" webxml="content/WEB-INF/web.xml">
+      <webinf dir="content/WEB-INF/">
+        <include name="**/*.jar" />
+      </webinf>
+    </war>
+  </target>
+  <target name="build" depends="compile">
+  </target>	
+</project>
