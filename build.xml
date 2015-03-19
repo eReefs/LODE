@@ -8,6 +8,7 @@
 
   <target name="clean">
     <delete dir="content/WEB-INF/classes" />
+  	<delete dir="content/META-INF" />
   </target>
   <target name="compile" depends="clean">
     <mkdir dir="content/WEB-INF/classes" />
@@ -30,6 +31,7 @@
   	<tstamp>
   	  <format property="TODAY" pattern="yyyy-MM-dd HH:mm:ss" />
     </tstamp>
+  	<mkdir dir="content/META-INF" />
   	<manifest file="content/META-INF/MANIFEST.MF">
   	  <attribute name="Application-Version" value="${env.APP_VERSION}"/>
 	  <attribute name="Build-Date" value="${TODAY}"/>                 

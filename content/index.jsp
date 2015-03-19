@@ -40,6 +40,9 @@
         </style>
     </head>
     <body>
+    	<h1>
+			<img alt="LODE logo" src="LODEBanner.png">
+		</h1>
 		<form enctype="multipart/form-data" action="<%= servletBase %>extract" method="get">
 			<input type="hidden" name="caller" value="<%= servletBase %>" />
 			<p>
