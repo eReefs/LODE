@@ -1,5 +1,9 @@
 <%
 	String servletBase = request.getRequestURL().toString().replaceAll("/[\\w|\\.]+$", "/");
+	java.util.Properties prop = new java.util.Properties();
+	prop.load(getServletContext().getResourceAsStream("/META-INF/MANIFEST.MF"));
+	String appVersion = prop.getProperty("Application-Version"); 
+	String buildDate = prop.getProperty("Build-Date");
 %>
 <!DOCTYPE html>
 <html>
@@ -62,7 +66,7 @@
 			<p><input type="submit" value="Generate Documentation"></p>
 		</form>
         <p>
-            <em><a href="http://www.github.com/essepuntato/LODE" title="Project homepage hosted by GitHub"><strong>L</strong>ive <strong>O</strong>WL <strong>D</strong>ocumentation <strong>E</strong>nvironment</a></em> (<em>LODE</em>), version 1.2 dated 3 June 2013, is a service that automatically extracts classes, object properties, data properties, named individuals, annotation properties, general axioms and namespace declarations from an OWL and OWL2 ontology, and renders them as ordered lists, together with their textual definitions, in a human-readable HTML page designed for browsing and navigation by means of embedded links.
+            <em><a href="http://www.github.com/essepuntato/LODE" title="Project homepage hosted by GitHub"><strong>L</strong>ive <strong>O</strong>WL <strong>D</strong>ocumentation <strong>E</strong>nvironment</a></em> (<em>LODE</em>), version <%= appVersion %> dated <%= buildDate %>, is a service that automatically extracts classes, object properties, data properties, named individuals, annotation properties, general axioms and namespace declarations from an OWL and OWL2 ontology, and renders them as ordered lists, together with their textual definitions, in a human-readable HTML page designed for browsing and navigation by means of embedded links.
         </p>
         <p>
             This LODE service is an open source development, and can be freely used, as described in this document. It may be used in conjunction with content negotiation to display this human-readable version of an OWL ontology when the user accesses the ontology using a web browser, or alternatively to deliver the OWL ontology itself when the user accesses the ontology using an ontology editing tool such as <a href="http://protege.stanford.edu/">Protégé</a> and <a href="http://neon-toolkit.org">NeOn Toolkit</a>. An exemplar implementation of such content negotiation is given in the <em><a href="http://www.w3.org/TR/swbp-vocab-pub/">Best Practice Recipes for Publishing RDF Vocabularies</a></em> by using the <em>.htaccess</em> file:

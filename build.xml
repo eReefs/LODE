@@ -3,7 +3,9 @@
   <property environment="env"/>
   <property name="env.SERVLET_DIR" value="/usr/share/tomcat7/lib"/>
   <property name="env.SERVLET_JAR" value="servlet-api.jar"/>
-  <property name="env.WARFILE" value="out/LODE-snapshot.war"/>
+  <property name="env.APP_VERSION" value="2.0.0.SNAPSHOT"/>
+  <property name="env.WARFILE" value="out/LODE-${env.APP_VERSION}.war"/>
+
   <target name="clean">
     <delete dir="content/WEB-INF/classes" />
   </target>
@@ -25,6 +27,13 @@
         <include name="**/*.xml" />
       </fileset>
     </copy>
+  	<tstamp>
+  	  <format property="TODAY" pattern="yyyy-MM-dd HH:mm:ss" />
+    </tstamp>
+  	<manifest file="content/META-INF/MANIFEST.MF">
+  	  <attribute name="Application-Version" value="${env.APP_VERSION}"/>
+	  <attribute name="Build-Date" value="${TODAY}"/>                 
+  	</manifest>
   </target>
   <target name="war" depends="compile">
     <war basedir="content" destfile="${env.WARFILE}" webxml="content/WEB-INF/web.xml">
