@@ -3,3 +3,5 @@
 /build
 /content/WEB-INF/classes
 /content/META-INF/MANIFEST.MF
+/test/lode
+/test/*.htm

@@ -3,15 +3,27 @@
   <property environment="env"/>
   <property name="env.SERVLET_DIR" value="/usr/share/tomcat7/lib"/>
   <property name="env.SERVLET_JAR" value="servlet-api.jar"/>
-  <property name="env.APP_VERSION" value="2.0.0.SNAPSHOT"/>
-  <property name="env.WARFILE" value="out/LODE-${env.APP_VERSION}.war"/>
-
+  <property name="env.SPECIFICATION_VERSION" value="1.2"/>
+  <property name="env.SPECIFICATION_VENDOR" value="Silvio Peroni, U.Bologna, http://www.essepuntato.it/lode"/>
+  <property name="env.IMPLEMENTATION_VERSION" value="2.0.0.SNAPSHOT"/>
+  <property name="env.IMPLEMENTATION_VENDOR" value="UNKNOWN"/>
+  <property name="env.BUILD_DIR" value="build"/>
+  <property name="env.OUT_DIR" value="out"/>
+  <property name="env.OUT_FILE" value="LODE-${env.IMPLEMENTATION_VERSION}"/>
+  <property name="env.TEST_URL" value="http://www.essepuntato.it/2008/12/earmark"/>
+  <property name="env.TEST_PATH" value="test/earmark.rdf"/>
+  <property name="env.TEST_HTML" value="test/earmark.htm"/>
+  <property name="absoluteTestPath" location="${env.TEST_PATH}"/>
+  <property name="absoluteTestHtml" location="${env.TEST_HTML}"/>
   <target name="clean">
+  	<delete dir="${env.BUILD_DIR}" />
     <delete dir="content/WEB-INF/classes" />
-  	<delete dir="content/META-INF" />
+  	<delete file="content/META-INF/MANIFEST.MF" />
+  	<sleep seconds="2"/> <!-- try to avoid race condition with mkdir -->
+  	<mkdir dir="${env.BUILD_DIR}" />
+  	<mkdir dir="content/WEB-INF/classes" />
   </target>
   <target name="compile" depends="clean">
-    <mkdir dir="content/WEB-INF/classes" />
     <javac destdir="content/WEB-INF/classes" srcdir="src" includeantruntime="false" debug="true">
       <classpath>
         <fileset dir="content/WEB-INF/lib">
@@ -33,17 +45,74 @@
     </tstamp>
   	<mkdir dir="content/META-INF" />
   	<manifest file="content/META-INF/MANIFEST.MF">
-  	  <attribute name="Application-Version" value="${env.APP_VERSION}"/>
-	  <attribute name="Build-Date" value="${TODAY}"/>                 
+	  <attribute name="Specification-Title" value="LODE"/>  
+	  <attribute name="Specification-Version" value="${env.SPECIFICATION_VERSION}"/>
+	  <attribute name="Specification-Vendor" value="${env.SPECIFICATION_VENDOR}"/>
+  	  <attribute name="Implementation-Title" value="LODE Servlets"/>  
+  	  <attribute name="Implementation-Version" value="${env.IMPLEMENTATION_VERSION}"/>
+  	  <attribute name="Implementation-Vendor" value="${env.IMPLEMENTATION_VENDOR}"/>
+  	  <attribute name="Build-Date" value="${TODAY}"/>                 
   	</manifest>
   </target>
   <target name="war" depends="compile">
-    <war basedir="content" destfile="${env.WARFILE}" webxml="content/WEB-INF/web.xml">
+    <war basedir="content" destfile="${env.OUT_DIR}/${env.OUT_FILE}.war" webxml="content/WEB-INF/web.xml">
       <webinf dir="content/WEB-INF/">
         <include name="**/*.jar" />
       </webinf>
     </war>
   </target>
+  <target name="jar" depends="compile">
+  	<copy todir="${env.BUILD_DIR}/server">
+      <fileset dir="content/server"/>
+  	</copy>
+  	<copy todir="${env.BUILD_DIR}/client">
+  	  <fileset dir="content/client"/>
+  	</copy>
+  	<copy todir="${env.BUILD_DIR}/lib">
+  	  <fileset dir="content/WEB-INF/lib"/>
+  	</copy>
+  	<path id="lib.jars">
+  	  <fileset dir="${env.BUILD_DIR}/">
+  	  	<include name="lib/*.jar"/>
+  	  </fileset>
+	</path>
+  	<manifestclasspath property="lib.jar.list" jarfile="${env.BUILD_DIR}/${env.OUT_FILE}.jar">
+  	  <classpath refid="lib.jars" />
+  	</manifestclasspath>
+  	<echo message="Classpath: ${lib.jar.list}"/>
+  	<jar destfile="${env.BUILD_DIR}/${env.OUT_FILE}.jar" basedir="content/WEB-INF/classes">
+  	  <manifest>
+  	    <attribute name="Specification-Title" value="LODE"/>  
+  	    <attribute name="Specification-Version" value="${env.SPECIFICATION_VERSION}"/>
+  	    <attribute name="Specification-Vendor" value="${env.SPECIFICATION_VENDOR}"/>
+    	<attribute name="Implementation-Title" value="LODE Command Line"/>  
+    	<attribute name="Implementation-Version" value="${env.IMPLEMENTATION_VERSION}"/>
+    	<attribute name="Implementation-Vendor" value="${env.IMPLEMENTATION_VENDOR}"/>
+    	<attribute name="Build-Date" value="${TODAY}"/>                 
+  	  	<attribute name="Main-Class" value="au.csiro.lode.LodeApp"/>
+  	  	<attribute name="Class-Path" value="${lib.jar.list}"/>
+  	  </manifest>
+  	</jar>
+  	<tar destfile="${env.OUT_DIR}/${env.OUT_FILE}_cmd-line.tar.gz" basedir="${env.BUILD_DIR}" compression="gzip"/>
+  </target>
+  <target name="can_cmd_line">
+  	<available file="${env.BUILD_DIR}/${env.OUT_FILE}.jar" property="jar.exists"/>
+  </target>	
+  <target name="do_cmd_line" depends="can_cmd_line" if="jar.exists">
+	<java jar="${env.BUILD_DIR}/${env.OUT_FILE}.jar" fork="true">
+	  <arg value="-url"/>
+	  <arg value="${env.TEST_URL}"/>
+	  <arg value="-path"/>
+	  <arg value="${absoluteTestPath}"/>
+	  <arg value="-html"/>
+	  <arg value="${absoluteTestHtml}"/>
+	  <arg value="-imported"/>
+	  <arg value="-closure"/>
+	  <arg value="-reasoner"/>
+  	</java>
+  </target>	
   <target name="build" depends="compile">
+  </target>	
+  <target name="all" depends="war,jar">
   </target>	
 </project>
