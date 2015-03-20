@@ -56,7 +56,7 @@ public class SourceExtractor {
 	
 	public InputStream getInputStream(URI uri) throws IOException, URISyntaxException {
 		InputStream sourceStream = null;
-		if (PathUtils.isLocalFile(uri)){
+		if ("file".equalsIgnoreCase(uri.getScheme())){
 			sourceStream = new FileInputStream(new File(uri));
 		}
 		else {
