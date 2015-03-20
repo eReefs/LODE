@@ -9,11 +9,11 @@
 <html>
     <head>
         <title>LODE - Live OWL Documentation Environment</title>
-        <link rel="shortcut icon" href="favicon.ico" />
-        <link href="owl.css" rel="stylesheet" type="text/css" />
-		<link href="Primer.css" rel="stylesheet" type="text/css" />
-		<link href="rec.css" rel="stylesheet" type="text/css" />
-		<link href="extra.css" rel="stylesheet" type="text/css" />
+        <link rel="shortcut icon" href="client/favicon.ico" />
+        <link href="client/owl.css" rel="stylesheet" type="text/css" />
+		<link href="client/Primer.css" rel="stylesheet" type="text/css" />
+		<link href="client/rec.css" rel="stylesheet" type="text/css" />
+		<link href="client/extra.css" rel="stylesheet" type="text/css" />
         <meta charset="UTF-8" />
 		<style type="text/css">
 			h1 {
@@ -41,7 +41,7 @@
     </head>
     <body>
     	<h1>
-			<img alt="LODE logo" src="LODEBanner.png">
+			<img alt="LODE logo" src="client/LODEBanner.png">
 		</h1>
 		<form enctype="multipart/form-data" action="<%= servletBase %>extract" method="get">
 			<input type="hidden" name="caller" value="<%= servletBase %>" />

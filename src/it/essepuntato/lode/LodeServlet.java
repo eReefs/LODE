@@ -52,9 +52,9 @@ public class LodeServlet extends HttpServlet {
 			// Derive context-dependent properties and resource file locations.
 			ServletContext context = getServletContext(); 
 			String servletUrl = request.getRequestURL().toString().replaceAll("/\\w+$", "/");
-			String cssLocation = servletUrl;
-			String pelletPropertiesPath = context.getRealPath("pellet.properties");
-			String xsltPath = context.getRealPath("extraction.xsl");
+			String cssLocation = servletUrl + "client/";
+			String pelletPropertiesPath = context.getRealPath("server/pellet.properties");
+			String xsltPath = context.getRealPath("server/extraction.xsl");
 			boolean webOnly = new Boolean(context.getInitParameter("webOnly"));
 						
 			// Identify the URI for the Ontology definition that should be parsed,
@@ -88,9 +88,7 @@ public class LodeServlet extends HttpServlet {
 	        }
 	        			
 			// Transform the ontology.
-			// Use the 'source' servlet to display the ontology source.
-			// The 'standard' cssLocation may be overridden by a request parameter.
-			String ontologySourceUrl = servletUrl + "source";
+			String ontologySourceUrl = servletUrl + "source?url=" + ontologyUrl;	// Calls the 'source' servlet in this webapp for this ontology definition.
 			String lang = request.getParameter("lang");	// null => 'en'.
 			result = LodeApi.transformOntology(ontologyContent, ontologyUrl, ontologySourceUrl, cssLocation, lang, xsltPath);
 		}
