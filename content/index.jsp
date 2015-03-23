@@ -2,7 +2,7 @@
 	String servletBase = request.getRequestURL().toString().replaceAll("/[\\w|\\.]+$", "/");
 	java.util.Properties prop = new java.util.Properties();
 	prop.load(getServletContext().getResourceAsStream("/META-INF/MANIFEST.MF"));
-	String appVersion = prop.getProperty("Application-Version"); 
+	String appVersion = prop.getProperty("Implementation-Version"); 
 	String buildDate = prop.getProperty("Build-Date");
 %>
 <!DOCTYPE html>
