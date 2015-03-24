@@ -65,6 +65,12 @@ public class LodeApp {
 													.isRequired(false)
 													.create("imports");
 		
+		Option ontologySourceOption = OptionBuilder.withArgName("ontologySource")
+				 									.withDescription("Optional: Absolute URL for a visualisation of the ontology source. If not provided, then the application will attempt to derive this form the url parameter.")
+				 									.hasArg()
+				 									.isRequired(false)
+				 									.create("source");
+		
 		Option languageOption = OptionBuilder.withArgName("languageCode")
 											 .withDescription("Optional: The specified language will be used as preferred language instead of English when showing annotations of the ontology specified in ontology-url. E.g.: \"lang=it\", \"lang=fr\", etc.")
 											 .hasArg()
@@ -78,6 +84,7 @@ public class LodeApp {
         options.addOption("closure",  false, "Optional: When specified, the transitive closure given by considering the imported ontologies of ontology-url is added to the HTML description of the ontology. If both functions closure and imported are specified (in any order), just imported will be considered.");
         options.addOption("imported", false, "Optional: When specified, the axioms contained the ontologies directed imported into ontology-url are added to the HTML description of the ontology. If both parameters closure and imported are specified (in any order), just imported will be considered.");
         options.addOption("reasoner", false, "Optional: When specified, the assertions inferable from ontology-url using the Pellet reasoner will be added to the HTML description of the ontology. Note that, depending upon the nature of your ontology, this computationally intensive function can be very time-consuming.");
+        options.addOption(ontologySourceOption);
         options.addOption(languageOption);
 
 		try {
@@ -133,28 +140,36 @@ public class LodeApp {
 	        System.out.print("Parsed OK. \n\n");
 	        
         	// Derive the URL and location of the source file from the HTML url and path.
-        	String ontologySourceName = ontologyHtmlFile.getName().replaceAll("\\.\\w+$", "") + ".rdf";
-        	String ontologySourceUrl = ontologyUrl.replaceAll("/[\\w\\.]+$", "") + "/" + ontologySourceName;
-        	String ontologySourcePath = ontologyHtmlFile.getParent() + File.separator + ontologySourceName;
-        	if (ontologySourcePath.equals(ontologyPath)){
-        		// This is *definitely* the proper source document. 
-        		System.out.println("Expecting '" + ontologySourceUrl + "' to reference the original ontology document at '" + ontologyPath + "'.\n");
+        	String ontologySourceUrl = cmd.getOptionValue(ontologySourceOption.getOpt(), null);
+        	if (ontologySourceUrl != null && !ontologySourceUrl.isEmpty()){
+        		// A specific value for the source parameter was provided. 
+        		System.out.println("Using provided source URL '" + ontologySourceUrl + "'.\n");       		
         	}
         	else {
-        		File ontologySourceFile = new File(ontologySourcePath);
-        		if (ontologySourceFile.exists()){
-	        		System.out.println("WARNING: Unable to save and reference ontology source: the file '" + ontologySourcePath + "' already exists, but was not specified as the ontology path.\n");
-	        		ontologySourceUrl = null;
+        		String ontologySourceName = ontologyHtmlFile.getName().replaceAll("\\.\\w+$", "") + ".rdf";
+        		String ontologySourcePath = ontologyHtmlFile.getParent() + File.separator + ontologySourceName;
+        		ontologySourceUrl = ontologyUrl.replaceAll("/[\\w\\.]+$", "") + "/" + ontologySourceName;
+        		
+        		if (ontologySourcePath.equals(ontologyPath)){
+        			// This is *definitely* the proper source document. 
+        			System.out.println("Expecting '" + ontologySourceUrl + "' to reference the original ontology document at '" + ontologyPath + "'.\n");
         		}
         		else {
-	        		System.out.print("\tSaving parsed ontology source to '" + ontologySourcePath + "'... ");
-	        		try (PrintWriter out = new PrintWriter(ontologySourceFile)){
-	    	        	out.write(ontologyContent);
-	    	        }
-	        		System.out.print("OK\n"); 
-	        		System.out.println("Expecting '" + ontologySourceUrl + "' to reference the saved ontology source at '" + ontologySourcePath + "'.\n");
-	        	}	        	
-	        }
+        			File ontologySourceFile = new File(ontologySourcePath);
+        			if (ontologySourceFile.exists()){
+        				System.out.println("WARNING: Unable to save and reference ontology source: the file '" + ontologySourcePath + "' already exists, but was not specified as the ontology path.\n");
+        				ontologySourceUrl = null;
+        			}
+        			else {
+        				System.out.print("\tSaving parsed ontology source to '" + ontologySourcePath + "'... ");
+        				try (PrintWriter out = new PrintWriter(ontologySourceFile)){
+        					out.write(ontologyContent);
+        				}
+        				System.out.print("OK\n"); 
+        				System.out.println("Expecting '" + ontologySourceUrl + "' to reference the saved ontology source at '" + ontologySourcePath + "'.\n");
+        			}	        	
+        		}
+        	}
 				
 	        // Transform the ontology Document to HTML, and save it to the specified location.
 	        System.out.print("Transforming ontology definition to HTML... ");

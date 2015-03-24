@@ -11,6 +11,7 @@
   <property name="env.OUT_DIR" value="out"/>
   <property name="env.OUT_FILE" value="LODE-${env.IMPLEMENTATION_VERSION}"/>
   <property name="env.TEST_URL" value="http://www.essepuntato.it/2008/12/earmark"/>
+  <property name="env.TEST_SOURCE" value="earmark.rdf"/>
   <property name="env.TEST_PATH" value="test/earmark.rdf"/>
   <property name="env.TEST_HTML" value="test/earmark.htm"/>
   <property name="absoluteTestPath" location="${env.TEST_PATH}"/>
@@ -102,6 +103,8 @@
 	<java jar="${env.BUILD_DIR}/${env.OUT_FILE}.jar" fork="true">
 	  <arg value="-url"/>
 	  <arg value="${env.TEST_URL}"/>
+	  <arg value="-source"/>
+	  <arg value="${env.TEST_SOURCE}"/>
 	  <arg value="-path"/>
 	  <arg value="${absoluteTestPath}"/>
 	  <arg value="-html"/>
