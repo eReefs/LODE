@@ -283,7 +283,7 @@ public class LodeApi {
 		}
 		else {
 			// Posix file system
-			if (path.matches("^/") && defaultIsLocal){
+			if (path.matches("^/.+") && defaultIsLocal){
 				// Treat paths starting with '/' as absolute file paths, rather than app-relative URLs.
 				uri = "file://" + uri;
 			}
