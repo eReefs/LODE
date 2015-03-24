@@ -146,18 +146,19 @@ public class LodeApp {
         		System.out.println("Using provided source URL '" + ontologySourceUrl + "'.\n");       		
         	}
         	else {
-        		String ontologySourceName = ontologyHtmlFile.getName().replaceAll("\\.\\w+$", "") + ".rdf";
-        		String ontologySourcePath = ontologyHtmlFile.getParent() + File.separator + ontologySourceName;
-        		ontologySourceUrl = ontologyUrl.replaceAll("/[\\w\\.]+$", "") + "/" + ontologySourceName;
-        		
+        		// We will attempt to verify that the ontology source file lives in the same location
+        		// that the ontology description file will be saved to, which allows it to be
+        		// referenced from the HTML file via a relative path.
+        		ontologySourceUrl = ontologyHtmlFile.getName().replaceAll("\\.\\w+$", "") + ".rdf";
+        		String ontologySourcePath = ontologyHtmlFile.getParent() + File.separator + ontologySourceUrl;
+        		        		
         		if (ontologySourcePath.equals(ontologyPath)){
-        			// This is *definitely* the proper source document. 
-        			System.out.println("Expecting '" + ontologySourceUrl + "' to reference the original ontology document at '" + ontologyPath + "'.\n");
+        			System.out.println("Using '" + ontologySourceUrl + "' to reference the original, local ontology document at '" + ontologyPath + "'.\n");
         		}
         		else {
         			File ontologySourceFile = new File(ontologySourcePath);
         			if (ontologySourceFile.exists()){
-        				System.out.println("WARNING: Unable to save and reference ontology source: the file '" + ontologySourcePath + "' already exists, but was not specified as the ontology path.\n");
+        				System.out.println("WARNING: Unable to save and reference local ontology source, because the file '" + ontologySourcePath + "' already exists, but was not specified as the ontology path.\n");
         				ontologySourceUrl = null;
         			}
         			else {
@@ -166,7 +167,7 @@ public class LodeApp {
         					out.write(ontologyContent);
         				}
         				System.out.print("OK\n"); 
-        				System.out.println("Expecting '" + ontologySourceUrl + "' to reference the saved ontology source at '" + ontologySourcePath + "'.\n");
+        				System.out.println("Using '" + ontologySourceUrl + "' to reference the archived ontology source at '" + ontologySourcePath + "'.\n");
         			}	        	
         		}
         	}
