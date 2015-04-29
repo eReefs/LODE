@@ -5,7 +5,7 @@
 # to process (all .ttl files in the parent directory) and output location.
 #..............................................................................
 SCRIPT="$0"
-SCRIPT_HOME="$( cd "$( dirname "$SCRIPT" )" && pwd )"
+SCRIPT_HOME=$(dirname "$SCRIPT")
 TTL_PATHS=
 OUTPUT_DIR=
 URL_BASE="http://purl.org"
@@ -17,7 +17,7 @@ URL_PATH_CHAR=
 LODE_JAR=$(ls ${SCRIPT_HOME}/build/LODE-*.jar)
 if [ ! -f "$LODE_JAR" ]
 then
-	echo "Unable to locate the LODE jarfile under '${SCRIPT_HOME}/build/'. Have you run the 'jar' And build task?"
+	echo "Unable to locate the LODE jarfile under '${SCRIPT_HOME}/build/'. Have you run the 'jar' Ant build task?"
 	exit 1
 fi
 
@@ -69,7 +69,7 @@ do
 		output_file=$(basename "${output}")
 		output="${OUTPUT_DIR}/${output_file}"
 	fi
-	url_path=$(basename "${no_ext_path})
+	url_path=$(basename "${no_ext_path}")
 	if [ ! -z "$URL_PATH_CHAR" ]
 	then
 		url_path=$(echo $url_path | sed -e "s/${URL_PATH_CHAR}/\//g")
