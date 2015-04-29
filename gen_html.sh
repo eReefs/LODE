@@ -17,7 +17,7 @@ URL_PATH_CHAR=
 LODE_JAR=$(ls ${SCRIPT_HOME}/build/LODE-*.jar)
 if [ ! -f "$LODE_JAR" ]
 then
-	echo "Unable to locate the LODE jarfile under "${SCRIPT_HOME}/build/". Have you run the 'jar' And build task?"
+	echo "Unable to locate the LODE jarfile under '${SCRIPT_HOME}/build/'. Have you run the 'jar' And build task?"
 	exit 1
 fi
 
