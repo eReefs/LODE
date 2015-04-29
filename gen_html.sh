@@ -68,7 +68,8 @@ fi
 for path in $SOURCE_PATHS
 do 
 	no_ext_path=${path%.rdf}
-	if [[ "${path}" == "${no_ext_path}" ]] then
+	if [[ "${path}" == "${no_ext_path}" ]] 
+	then
 		no_ext_path=${path%.ttl}
 	fi
 	output="${no_ext_path}.htm"
