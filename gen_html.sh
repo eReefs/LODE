@@ -6,7 +6,9 @@
 #..............................................................................
 SCRIPT="$0"
 SCRIPT_HOME=$(dirname "$SCRIPT")
-TTL_PATHS=
+SOURCE_BASE="${SCRIPT_HOME}/.."
+SOURCE_EXT=ttl
+SOURCE_PATHS=
 OUTPUT_DIR=
 URL_BASE="http://purl.org"
 URL_PATH_CHAR=
@@ -24,17 +26,20 @@ fi
 #..............................................................................
 # Parse command line arguments for any overrides.
 #..............................................................................
-while getopts "h?f:d:o:u:c:" opt; do
+while getopts "h?f:e:d:o:u:c:" opt; do
 	case $opt in
 	h|\?)
-		echo "usage: gen_rdf.sh [-f <ttl_file> | -d <ttl_dir> ] [ -o <output_dir> ] [ -u <url_base> ] [-c <url_path_char> ]"
+		echo "usage: gen_rdf.sh [ -f <rdf_or_ttl_file>  | -d <rdf_or_ttl_dir> ] [ -e <rdf_or_ttl_extension> ] [ -o <output_dir> ] [ -u <url_base> ] [-c <url_path_char> ]"
 		exit 0
 		;;
 	f)
-		TTL_PATHS=$OPTARG
+		SOURCE_PATHS=$OPTARG
+		;;
+	e)
+		SOURCE_EXT=$OPTARG
 		;;
 	d)
-		TTL_PATHS=$(ls ${OPTARG}/*.ttl)
+		SOURCE_BASE=$OPTARG
 		;;
 	o)
 		OUTPUT_DIR=$OPTARG
@@ -54,15 +59,18 @@ done
 shift $((OPTIND - 1))
 
 #..............................................................................
-# Convert and save the identified .TTL files.
+# Convert and save the identified vocabulary definition files.
 #..............................................................................
-if [ -z "$TTL_PATHS" ]
+if [ -z "$SOURCE_PATHS" ]
 then
-	TTL_PATHS=$(ls ${SCRIPT_HOME}/../*.ttl)
+	SOURCE_PATHS=$(ls ${SOURCE_BASE}/*.${SOURCE_EXT})
 fi
-for path in $TTL_PATHS
+for path in $SOURCE_PATHS
 do 
-	no_ext_path=${path%.ttl}
+	no_ext_path=${path%.rdf}
+	if [[ "${path}" == "${no_ext_path}" ]] then
+		no_ext_path=${path%.ttl}
+	fi
 	output="${no_ext_path}.htm"
 	if [ ! -z "${OUTPUT_DIR}" ]
 	then
