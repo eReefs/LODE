@@ -5,7 +5,7 @@
   <property name="env.SERVLET_JAR" value="servlet-api.jar"/>
   <property name="env.SPECIFICATION_VERSION" value="1.2"/>
   <property name="env.SPECIFICATION_VENDOR" value="Silvio Peroni, U.Bologna, http://www.essepuntato.it/lode"/>
-  <property name="env.IMPLEMENTATION_VERSION" value="2.0.0.SNAPSHOT"/>
+  <property name="env.IMPLEMENTATION_VERSION" value="1.2.0.SNAPSHOT"/>
   <property name="env.IMPLEMENTATION_VENDOR" value="UNKNOWN"/>
   <property name="env.BUILD_DIR" value="build"/>
   <property name="env.OUT_DIR" value="out"/>
