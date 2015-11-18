@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project basedir="." default="build" name="LODE">
+  <property environment="env"/>
+  <property name="env.SERVLET_DIR" value="/usr/share/tomcat7/lib"/>
+  <property name="env.SERVLET_JAR" value="servlet-api.jar"/>
+  <property name="env.APP_VERSION" value="2.0.0.SNAPSHOT"/>
+  <property name="env.WARFILE" value="out/LODE-${env.APP_VERSION}.war"/>
+
+  <target name="clean">
+    <delete dir="content/WEB-INF/classes" />
+  </target>
+  <target name="compile" depends="clean">
+    <mkdir dir="content/WEB-INF/classes" />
+    <javac destdir="content/WEB-INF/classes" srcdir="src" includeantruntime="false" debug="true">
+      <classpath>
+        <fileset dir="content/WEB-INF/lib">
+          <include name="*" />
+        </fileset>
+        <fileset dir="${env.SERVLET_DIR}">
+          <include name="${env.SERVLET_JAR}"/>
+        </fileset>
+      </classpath>
+    </javac>
+    <copy todir="content/WEB-INF/classes">
+      <fileset dir="src">
+        <include name="**/*.properties" />
+        <include name="**/*.xml" />
+      </fileset>
+    </copy>
+  	<tstamp>
+  	  <format property="TODAY" pattern="yyyy-MM-dd HH:mm:ss" />
+    </tstamp>
+  	<manifest file="content/META-INF/MANIFEST.MF">
+  	  <attribute name="Application-Version" value="${env.APP_VERSION}"/>
+	  <attribute name="Build-Date" value="${TODAY}"/>                 
+  	</manifest>
+  </target>
+  <target name="war" depends="compile">
+    <war basedir="content" destfile="${env.WARFILE}" webxml="content/WEB-INF/web.xml">
+      <webinf dir="content/WEB-INF/">
+        <include name="**/*.jar" />
+      </webinf>
+    </war>
+  </target>
+  <target name="build" depends="compile">
+  </target>	
+</project>
