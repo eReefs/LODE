@@ -162,9 +162,10 @@ public class LodeApi {
 				
 		IRI ontologyIri = IRI.create(ontologyUri);
 		HttpURLConnection.setFollowRedirects(true);
-		OWLOntology ontology = manager.loadOntology(ontologyIri);
+		OWLOntology ontology = null;
 					
 		if (considerImportedClosure || considerImportedOntologies) {
+			ontology = manager.loadOntology(ontologyIri);
 			Set<OWLOntology> setOfImportedOntologies = new HashSet<OWLOntology>();
 			if (considerImportedOntologies) {
 				setOfImportedOntologies.addAll(ontology.getDirectImports());
@@ -174,7 +175,12 @@ public class LodeApi {
 			for (OWLOntology importedOntology : setOfImportedOntologies) {
 				manager.addAxioms(ontology, importedOntology.getAxioms());
 			}
-		}	
+		} 
+		else {
+			manager.setSilentMissingImportsHandling(true);
+			ontology = manager.loadOntology(ontologyIri);
+		}
+		
 		if (useReasoner) {
 			ontology = parseWithReasoner(manager, ontology);
 		}
