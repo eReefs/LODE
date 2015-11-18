@@ -7,7 +7,11 @@
   <property name="env.SPECIFICATION_VENDOR" value="Silvio Peroni, U.Bologna, http://www.essepuntato.it/lode"/>
   <property name="env.IMPLEMENTATION_VERSION" value="2.0.0.SNAPSHOT"/>
   <property name="env.IMPLEMENTATION_VENDOR" value="UNKNOWN"/>
+  <property name="env.SRC_DIR" value="src/main/java"/>
+  <property name="env.WEBAPP_DIR" value="src/main/webapp"/>
   <property name="env.BUILD_DIR" value="build"/>
+  <property name="env.WAR_DIR" value="${env.BUILD_DIR}/war"/>
+  <property name="env.JAR_DIR" value="${env.BUILD_DIR}/jar"/>
   <property name="env.OUT_DIR" value="out"/>
   <property name="env.OUT_FILE" value="LODE-${env.IMPLEMENTATION_VERSION}"/>
   <property name="env.TEST_URL" value="http://www.essepuntato.it/2008/12/earmark"/>
@@ -15,6 +19,8 @@
   <property name="env.TEST_HTML" value="test/earmark.htm"/>
   <property name="absoluteTestPath" location="${env.TEST_PATH}"/>
   <property name="absoluteTestHtml" location="${env.TEST_HTML}"/>
+
+  <target name="mvn-init" unless="compile.classpath" xmlns:artifact="urn:maven-artifact-ant">
     <typedef resource="org/apache/maven/artifact/ant/antlib.xml" uri="urn:maven-artifact-ant" classpath="lib/maven-ant-tasks.jar"/> 
     <condition property="maven.repo.local" value="${maven.repo.local}" else="${user.home}/.m2/repository">
       <isset property="maven.repo.local"/>
@@ -35,38 +41,41 @@
       <localRepository refid="local.repository"/>
     </artifact:dependencies>
   </target>
+	
   <target name="clean">
   	<delete dir="${env.BUILD_DIR}" />
+  	<delete dir="${env.OUT_DIR}" />
   </target>
+	
   <target name="compile" depends="mvn-init,clean">
-    <mkdir dir="build" />
-    <copy todir="build">
-      <fileset dir="src/main/webapp">
-      </fileset>
-    </copy>  	
-    <mkdir dir="build/WEB-INF/classes" />
-    <javac destdir="build/WEB-INF/classes" srcdir="src/main/java" classpathref="compile.classpath" includeantruntime="false" debug="true">
+    <mkdir dir="${env.BUILD_DIR}" />
+    <mkdir dir="${env.BUILD_DIR}/classes" />
+    <javac destdir="${env.BUILD_DIR}/classes" srcdir="${env.SRC_DIR}" classpathref="compile.classpath" includeantruntime="false" debug="true">
       <compilerarg value="-Xlint:deprecation"/>
-  	  <!--
-      <classpath>
-        <fileset dir="build/WEB-INF/lib">
-          <include name="*" />
-        </fileset>
-        <fileset dir="${env.SERVLET_DIR}">
-          <include name="${env.SERVLET_JAR}"/>
-        </fileset>
-      </classpath>
-      -->
     </javac>
-    <copy todir="build/WEB-INF/classes">
-      <fileset dir="src/main/java">
+    <copy todir="${env.BUILD_DIR}/classes">
+      <fileset dir="${env.SRC_DIR}">
         <exclude name="**/*.java" />
       </fileset>
     </copy>
+  </target>
+  <target name="war" depends="compile">
+    <mkdir dir="${env.WAR_DIR}" />
+    <copy todir="${env.WAR_DIR}">
+      <fileset dir="${env.WEBAPP_DIR}">
+      </fileset>
+    </copy>  	
+    <copy todir="${env.WAR_DIR}/WEB-INF/classes">
+      <fileset dir="${env.BUILD_DIR}/classes">
+      </fileset>
+    </copy>
+  	<copy todir="${env.WAR_DIR}/WEB-INF/lib" flatten="true">
+      <fileset refid="runtime.fileset"/>
+  	</copy>
   	<tstamp>
   	  <format property="TODAY" pattern="yyyy-MM-dd HH:mm:ss" />
     </tstamp>
-  	<manifest file="build/META-INF/MANIFEST.MF">
+  	<manifest file="${env.WAR_DIR}/META-INF/MANIFEST.MF">
 	  <attribute name="Specification-Title" value="LODE"/>  
 	  <attribute name="Specification-Version" value="${env.SPECIFICATION_VERSION}"/>
 	  <attribute name="Specification-Vendor" value="${env.SPECIFICATION_VENDOR}"/>
@@ -75,34 +84,34 @@
   	  <attribute name="Implementation-Vendor" value="${env.IMPLEMENTATION_VENDOR}"/>
   	  <attribute name="Build-Date" value="${TODAY}"/>                 
   	</manifest>
-  </target>
-  <target name="war" depends="compile">
-    <war basedir="content" destfile="${env.OUT_DIR}/${env.OUT_FILE}.war" webxml="content/WEB-INF/web.xml">
-      <webinf dir="content/WEB-INF/">
+    <mkdir dir="${env.OUT_DIR}" />
+    <war basedir="${env.WAR_DIR}" destfile="${env.OUT_DIR}/${env.OUT_FILE}.war" webxml="${env.WAR_DIR}/WEB-INF/web.xml">
+      <webinf dir="${env.WAR_DIR}/WEB-INF/">
         <include name="**/*.jar" />
       </webinf>
     </war>
   </target>
   <target name="jar" depends="compile">
-  	<copy todir="${env.BUILD_DIR}/server">
-      <fileset dir="content/server"/>
+    <mkdir dir="${env.JAR_DIR}" />
+  	<copy todir="${env.JAR_DIR}/server">
+      <fileset dir="${env.WEBAPP_DIR}/server"/>
   	</copy>
-  	<copy todir="${env.BUILD_DIR}/client">
-  	  <fileset dir="content/client"/>
+  	<copy todir="${env.JAR_DIR}/client">
+  	  <fileset dir="${env.WEBAPP_DIR}/client"/>
   	</copy>
-  	<copy todir="${env.BUILD_DIR}/lib">
-  	  <fileset dir="content/WEB-INF/lib"/>
+  	<copy todir="${env.JAR_DIR}/lib" flatten="true">
+      <fileset refid="runtime.fileset"/>
   	</copy>
   	<path id="lib.jars">
-  	  <fileset dir="${env.BUILD_DIR}/">
+  	  <fileset dir="${env.JAR_DIR}">
   	  	<include name="lib/*.jar"/>
   	  </fileset>
 	</path>
-  	<manifestclasspath property="lib.jar.list" jarfile="${env.BUILD_DIR}/${env.OUT_FILE}.jar">
+  	<manifestclasspath property="lib.jar.list" jarfile="${env.JAR_DIR}/${env.OUT_FILE}.jar">
   	  <classpath refid="lib.jars" />
   	</manifestclasspath>
   	<echo message="Classpath: ${lib.jar.list}"/>
-  	<jar destfile="${env.BUILD_DIR}/${env.OUT_FILE}.jar" basedir="content/WEB-INF/classes">
+  	<jar destfile="${env.JAR_DIR}/${env.OUT_FILE}.jar" basedir="${env.BUILD_DIR}/classes">
   	  <manifest>
   	    <attribute name="Specification-Title" value="LODE"/>  
   	    <attribute name="Specification-Version" value="${env.SPECIFICATION_VERSION}"/>
@@ -115,13 +124,13 @@
   	  	<attribute name="Class-Path" value="${lib.jar.list}"/>
   	  </manifest>
   	</jar>
-  	<tar destfile="${env.OUT_DIR}/${env.OUT_FILE}_cmd-line.tar.gz" basedir="${env.BUILD_DIR}" compression="gzip"/>
+  	<tar destfile="${env.OUT_DIR}/${env.OUT_FILE}_cmd-line.tar.gz" basedir="${env.JAR_DIR}" compression="gzip"/>
   </target>
   <target name="can_cmd_line">
-  	<available file="${env.BUILD_DIR}/${env.OUT_FILE}.jar" property="jar.exists"/>
+  	<available file="${env.JAR_DIR}/${env.OUT_FILE}.jar" property="jar.exists"/>
   </target>	
   <target name="do_cmd_line" depends="can_cmd_line" if="jar.exists">
-	<java jar="${env.BUILD_DIR}/${env.OUT_FILE}.jar" fork="true">
+	<java jar="${env.JAR_DIR}/${env.OUT_FILE}.jar" fork="true">
 	  <arg value="-url"/>
 	  <arg value="${env.TEST_URL}"/>
 	  <arg value="-path"/>
