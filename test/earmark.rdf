@@ -1,0 +1,376 @@
+<?xml version="1.0"?>
+<!DOCTYPE rdf:RDF [
+    <!ENTITY owl "http://www.w3.org/2002/07/owl#" >
+    <!ENTITY dc "http://purl.org/dc/elements/1.1/" >
+    <!ENTITY xsd "http://www.w3.org/2001/XMLSchema#" >
+    <!ENTITY rdfs "http://www.w3.org/2000/01/rdf-schema#" >
+    <!ENTITY earmark "http://www.essepuntato.it/2008/12/earmark#" >
+    <!ENTITY rdf "http://www.w3.org/1999/02/22-rdf-syntax-ns#" >
+    <!ENTITY collections "http://swan.mindinformatics.org/ontologies/1.2/collections/" >
+]>
+
+
+<rdf:RDF xmlns="http://www.essepuntato.it/2008/12/earmark#"
+     xml:base="http://www.essepuntato.it/2008/12/earmark"
+     xmlns:earmark="http://www.essepuntato.it/2008/12/earmark#"
+     xmlns:dc="http://purl.org/dc/elements/1.1/"
+     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+     xmlns:owl="http://www.w3.org/2002/07/owl#"
+     xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:collections="http://swan.mindinformatics.org/ontologies/1.2/collections/">
+    <owl:Ontology rdf:about="http://www.essepuntato.it/2008/12/earmark">
+        <rdfs:label rdf:datatype="&xsd;string">EARMARK Ontology: shell classes</rdfs:label>
+        <owl:versionInfo rdf:datatype="&xsd;string">2.0</owl:versionInfo>
+        <dc:contributor rdf:datatype="&xsd;string">Angelo Di Iorio</dc:contributor>
+        <dc:title rdf:datatype="&xsd;string">EARMARK Ontology</dc:title>
+        <dc:contributor rdf:datatype="&xsd;string">Fabio Vitali</dc:contributor>
+        <dc:creator rdf:datatype="&xsd;string">Silvio Peroni</dc:creator>
+        <dc:language rdf:datatype="&xsd;language">en</dc:language>
+        <dc:date>2014-05-13</dc:date>
+        <rdfs:comment xml:lang="en">Extremely Annotational RDF Markup (EARMARK) is a meta-syntax for non-embedded markup that can be used for stand-off annotations of textual content with fully W3C-compliant technologies.
+
+This document represents the EARMARK ontology definition of the shell classes i.e., all those classes that must be used to define all the elements, attributes, comments, text nodes and hierarchies among them.</rdfs:comment>
+        <dc:description xml:lang="en">Extremely Annotational RDF Markup is a meta-syntax for non-embedded markup that can be used for stand-off annotations of textual content with fully W3C-compliant technologies. EARMARK is based on an ontologically precise definition of markup that instantiates the markup of a text document as an independent OWL document outside of the text strings it annotates, and through appropriate OWL and SWRL characterizations it can define structures such as trees or graphs and can be used to generate validity constraints (including co-constraints currently unavailable in most validation languages).</dc:description>
+        <dc:rights xml:lang="en">This ontology is distributed under a Creative Commons Attribution License - http://creativecommons.org/licenses/by/3.0</dc:rights>
+        <dc:description rdf:resource="http://dwellonit.svn.sourceforge.net/svnroot/dwellonit/EARMARK/earmark.png"/>
+        <owl:imports rdf:resource="http://www.essepuntato.it/2010/05/ghost"/>
+    </owl:Ontology>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Annotation properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://purl.org/dc/elements/1.1/contributor -->
+
+    <owl:AnnotationProperty rdf:about="&dc;contributor"/>
+    
+
+
+    <!-- http://purl.org/dc/elements/1.1/creator -->
+
+    <owl:AnnotationProperty rdf:about="&dc;creator"/>
+    
+
+
+    <!-- http://purl.org/dc/elements/1.1/date -->
+
+    <owl:AnnotationProperty rdf:about="&dc;date"/>
+    
+
+
+    <!-- http://purl.org/dc/elements/1.1/language -->
+
+    <owl:AnnotationProperty rdf:about="&dc;language"/>
+    
+
+
+    <!-- http://purl.org/dc/elements/1.1/rights -->
+
+    <owl:AnnotationProperty rdf:about="&dc;rights"/>
+    
+
+
+    <!-- http://purl.org/dc/elements/1.1/title -->
+
+    <owl:AnnotationProperty rdf:about="&dc;title"/>
+    
+
+
+    <!-- http://www.w3.org/2000/01/rdf-schema#comment -->
+
+    <owl:AnnotationProperty rdf:about="&rdfs;comment"/>
+    
+
+
+    <!-- http://www.w3.org/2000/01/rdf-schema#label -->
+
+    <owl:AnnotationProperty rdf:about="&rdfs;label"/>
+    
+
+
+    <!-- http://www.w3.org/2002/07/owl#versionInfo -->
+
+    <owl:AnnotationProperty rdf:about="&owl;versionInfo"/>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Object Properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://www.essepuntato.it/2008/12/earmark#refersTo -->
+
+    <owl:ObjectProperty rdf:about="&earmark;refersTo"/>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Data properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://www.essepuntato.it/2008/12/earmark#begins -->
+
+    <owl:DatatypeProperty rdf:about="&earmark;begins"/>
+    
+
+
+    <!-- http://www.essepuntato.it/2008/12/earmark#ends -->
+
+    <owl:DatatypeProperty rdf:about="&earmark;ends"/>
+    
+
+
+    <!-- http://www.essepuntato.it/2008/12/earmark#hasContent -->
+
+    <owl:DatatypeProperty rdf:about="&earmark;hasContent"/>
+    
+
+
+    <!-- http://www.essepuntato.it/2008/12/earmark#hasXPathContext -->
+
+    <owl:DatatypeProperty rdf:about="&earmark;hasXPathContext">
+        <rdf:type rdf:resource="&owl;FunctionalProperty"/>
+        <rdfs:label xml:lang="en">has xpath context</rdfs:label>
+        <rdfs:comment xml:lang="en">It defines a particular xpath context for the range.</rdfs:comment>
+        <rdfs:domain rdf:resource="&earmark;XPathRange"/>
+        <rdfs:range rdf:resource="&xsd;string"/>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Classes
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://www.essepuntato.it/2008/12/earmark#Attribute -->
+
+    <owl:Class rdf:about="&earmark;Attribute">
+        <rdfs:label xml:lang="en">attribute</rdfs:label>
+        <rdfs:subClassOf rdf:resource="&earmark;MarkupItem"/>
+        <rdfs:comment xml:lang="en">A markup item identifying an attribute, as the item &apos;src&apos; in the following XML excerpt:
+
+&lt;img src=&quot;http://palindrom.es/phd/wp-content/uploads/2009/10/EARMARKLogo.png&quot; /&gt;</rdfs:comment>
+    </owl:Class>
+    
+
+
+    <!-- http://www.essepuntato.it/2008/12/earmark#Comment -->
+
+    <owl:Class rdf:about="&earmark;Comment">
+        <rdfs:label xml:lang="en">comment</rdfs:label>
+        <rdfs:subClassOf rdf:resource="&earmark;MarkupItem"/>
+        <rdfs:comment xml:lang="en">A markup item identifying a comment, as the item containing the string &apos;This is a comment&apos; in the following XML excerpt:
+
+&lt;!-- This is a comment --&gt;</rdfs:comment>
+    </owl:Class>
+    
+
+
+    <!-- http://www.essepuntato.it/2008/12/earmark#Docuverse -->
+
+    <owl:Class rdf:about="&earmark;Docuverse"/>
+    
+
+
+    <!-- http://www.essepuntato.it/2008/12/earmark#Element -->
+
+    <owl:Class rdf:about="&earmark;Element">
+        <rdfs:label xml:lang="en">element</rdfs:label>
+        <rdfs:subClassOf rdf:resource="&earmark;MarkupItem"/>
+        <rdfs:comment xml:lang="en">A markup item identifying an element, as the item &apos;img&apos; in the following XML excerpt:
+
+&lt;img src=&quot;http://palindrom.es/phd/wp-content/uploads/2009/10/EARMARKLogo.png&quot; /&gt;</rdfs:comment>
+    </owl:Class>
+    
+
+
+    <!-- http://www.essepuntato.it/2008/12/earmark#MarkupItem -->
+
+    <owl:Class rdf:about="&earmark;MarkupItem"/>
+    
+
+
+    <!-- http://www.essepuntato.it/2008/12/earmark#PointerRange -->
+
+    <owl:Class rdf:about="&earmark;PointerRange">
+        <rdfs:label xml:lang="en">pointer range</rdfs:label>
+        <rdfs:subClassOf rdf:resource="&earmark;Range"/>
+        <rdfs:subClassOf>
+            <owl:Class>
+                <owl:intersectionOf rdf:parseType="Collection">
+                    <owl:Restriction>
+                        <owl:onProperty rdf:resource="&earmark;begins"/>
+                        <owl:allValuesFrom rdf:resource="&xsd;nonNegativeInteger"/>
+                    </owl:Restriction>
+                    <owl:Restriction>
+                        <owl:onProperty rdf:resource="&earmark;ends"/>
+                        <owl:allValuesFrom rdf:resource="&xsd;nonNegativeInteger"/>
+                    </owl:Restriction>
+                </owl:intersectionOf>
+            </owl:Class>
+        </rdfs:subClassOf>
+        <owl:disjointWith rdf:resource="&earmark;XPathRange"/>
+        <rdfs:comment xml:lang="en">A range that refers to any text lying between two non-negative integer locations that identify precise positions withing a docuverse.
+
+Each location of this kind of range refers to a point before or after a particular character. For instance, taking into consideration the string &apos;This is an example&apos; contained by a docuverse, the location &apos;0&apos; is immediately before the first character &apos;T&apos;, location &apos;1&apos; is immediately after the character &apos;T&apos; and before the character &apos;h&apos;, the location &apos;2&apos; is after the character &apos;h&apos; and before &apos;i&apos;, and so on.
+
+Note that these ranges allow to define (considering the string &apos;a devil&apos; as content of a docuverse as example):
+- document-order ranges, i.e., those ranges that has the begin location lesser than the end location (e.g., begin = 2, end = 7, content result &apos;devil&apos;);
+- reverse-order ranges, i.e., those ranges that has the begin location greater than the end location (e.g., begin = 7, end = 2, content result &apos;lived&apos;).</rdfs:comment>
+        <owl:hasKey rdf:parseType="Collection">
+            <rdf:Description rdf:about="&earmark;refersTo"/>
+            <rdf:Description rdf:about="&earmark;begins"/>
+            <rdf:Description rdf:about="&earmark;ends"/>
+        </owl:hasKey>
+    </owl:Class>
+    
+
+
+    <!-- http://www.essepuntato.it/2008/12/earmark#Range -->
+
+    <owl:Class rdf:about="&earmark;Range"/>
+    
+
+
+    <!-- http://www.essepuntato.it/2008/12/earmark#StringDocuverse -->
+
+    <owl:Class rdf:about="&earmark;StringDocuverse">
+        <rdfs:label xml:lang="en">string docuverse</rdfs:label>
+        <rdfs:subClassOf rdf:resource="&earmark;Docuverse"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="&earmark;hasContent"/>
+                <owl:allValuesFrom rdf:resource="&xsd;string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <owl:disjointWith rdf:resource="&earmark;URIDocuverse"/>
+        <rdfs:comment xml:lang="en">A docuverse that specifies all its content in form of a string, such as &apos;This is the string the docuverse represents.&apos;.</rdfs:comment>
+    </owl:Class>
+    
+
+
+    <!-- http://www.essepuntato.it/2008/12/earmark#URIDocuverse -->
+
+    <owl:Class rdf:about="&earmark;URIDocuverse">
+        <rdfs:label xml:lang="en">URI docuverse</rdfs:label>
+        <rdfs:subClassOf rdf:resource="&earmark;Docuverse"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="&earmark;hasContent"/>
+                <owl:allValuesFrom rdf:resource="&xsd;anyURI"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:comment xml:lang="en">A container of strings that may appear in the document, such as the URL &apos;http://www.essepuntato.it/2008/12/docuverse.txt&apos; that contains the string &apos;This is the string the docuverse represents.&apos;</rdfs:comment>
+    </owl:Class>
+    
+
+
+    <!-- http://www.essepuntato.it/2008/12/earmark#XPathPointerRange -->
+
+    <owl:Class rdf:about="&earmark;XPathPointerRange">
+        <rdfs:label xml:lang="en">xpath pointer range</rdfs:label>
+        <rdfs:subClassOf rdf:resource="&earmark;XPathRange"/>
+        <rdfs:subClassOf>
+            <owl:Class>
+                <owl:intersectionOf rdf:parseType="Collection">
+                    <owl:Restriction>
+                        <owl:onProperty rdf:resource="&earmark;begins"/>
+                        <owl:allValuesFrom rdf:resource="&xsd;nonNegativeInteger"/>
+                    </owl:Restriction>
+                    <owl:Restriction>
+                        <owl:onProperty rdf:resource="&earmark;ends"/>
+                        <owl:allValuesFrom rdf:resource="&xsd;nonNegativeInteger"/>
+                    </owl:Restriction>
+                </owl:intersectionOf>
+            </owl:Class>
+        </rdfs:subClassOf>
+        <rdfs:comment xml:lang="en">A range that refers to any text, obtained from a particular xpath context starting from a docuverse content, lying between two non-negative integere locations that identify precise positions.
+
+This kind of range allows to define specific positions, as explained for the class &apos;PointerRange&apos;, within the concatenation of strings obtained by applying the xpath context to the docuverse the range refers to, as introduce in the class &apos;XPathRange&apos;.
+
+For instance, considering the following docuverse content:
+
+&lt;root&gt;&lt;p&gt;No devil &lt;/p&gt;&lt;p&gt;lived on&lt;/p&gt;&lt;/root&gt;
+
+the range defined on that docuverse as xpath_context = &apos;//p&apos;, begin = &apos;0&apos;, end = &apos;17&apos; refers to the text &apos;No devil lived on&apos;.
+
+NB: if we define a standard pointer range on the same docuverse using the same begin and end locations of the previous one, what we obtain as text will be &apos;&lt;root&gt;&lt;p&gt;No devil&apos;.</rdfs:comment>
+    </owl:Class>
+    
+
+
+    <!-- http://www.essepuntato.it/2008/12/earmark#XPathRange -->
+
+    <owl:Class rdf:about="&earmark;XPathRange">
+        <rdfs:label xml:lang="en">xpath range</rdfs:label>
+        <owl:equivalentClass>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="&earmark;hasXPathContext"/>
+                <owl:someValuesFrom rdf:resource="&xsd;string"/>
+            </owl:Restriction>
+        </owl:equivalentClass>
+        <rdfs:subClassOf rdf:resource="&earmark;Range"/>
+        <rdfs:comment xml:lang="en">A range that refers to any text, obtained from a particular xpath context starting from the docuverse content, lying between two locations that identify precise positions.
+
+The semantics of this kind of range is the following:
+1. assuming the content of the docuverse the range refers to as well-formed XML, we consider the sequence composed by the nodes obtained by running the xpath context (= a query) on the docuverse. If some non-nodes (e.g., strings, integers, etc.) is returned, it must be excluded from the sequence;
+2. for each node in the sequence, we consider its &apos;value-of&apos;, i.e., the strings contained in all the text nodes reachable starting from the node itself;
+3. considering the concatenation of all the strings obtained in the previous point, we now calculate the begin and end locations of the range.</rdfs:comment>
+        <owl:hasKey rdf:parseType="Collection">
+            <rdf:Description rdf:about="&earmark;refersTo"/>
+            <rdf:Description rdf:about="&earmark;begins"/>
+            <rdf:Description rdf:about="&earmark;ends"/>
+            <rdf:Description rdf:about="&earmark;hasXPathContext"/>
+        </owl:hasKey>
+    </owl:Class>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // General axioms
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    <rdf:Description>
+        <rdf:type rdf:resource="&owl;AllDisjointClasses"/>
+        <owl:members rdf:parseType="Collection">
+            <rdf:Description rdf:about="&earmark;Attribute"/>
+            <rdf:Description rdf:about="&earmark;Comment"/>
+            <rdf:Description rdf:about="&earmark;Element"/>
+        </owl:members>
+    </rdf:Description>
+</rdf:RDF>
