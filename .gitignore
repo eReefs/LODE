@@ -3,11 +3,10 @@
 .project
 .settings/
 /bin
+
 # Ant
-/out
 /build
-/content/WEB-INF/classes
-/content/META-INF/MANIFEST.MF
+/out
 
 # Intellij
 .idea/
