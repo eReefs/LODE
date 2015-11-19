@@ -8,6 +8,7 @@
   <property name="env.IMPLEMENTATION_VERSION" value="2.0.0.SNAPSHOT"/>
   <property name="env.IMPLEMENTATION_VENDOR" value="UNKNOWN"/>
   <property name="env.SRC_DIR" value="src/main/java"/>
+  <property name="env.SCRIPT_DIR" value="src/main/script"/>
   <property name="env.WEBAPP_DIR" value="src/main/webapp"/>
   <property name="env.BUILD_DIR" value="build"/>
   <property name="env.WAR_DIR" value="${env.BUILD_DIR}/war"/>
@@ -98,6 +99,9 @@
   </target>
   <target name="jar" depends="compile">
     <mkdir dir="${env.JAR_DIR}" />
+  	<copy todir="${env.JAR_DIR}">
+  	  <fileset dir="${env.SCRIPT_DIR}"/>
+  	</copy>
   	<copy todir="${env.JAR_DIR}/server">
       <fileset dir="${env.WEBAPP_DIR}/server"/>
   	</copy>
