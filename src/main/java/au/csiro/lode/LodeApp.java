@@ -108,8 +108,10 @@ public class LodeApp {
 			File executionFile = new File(executionUri);
 			String contentDirPath = null;
 			if (executionFile.isDirectory() && "classes".equals(executionFile.getName())){
-				// Assume we are working from the .war file structure (likely in development).
-				contentDirPath = executionFile.getParentFile().getParent();
+				// Assume we are working from the source code structure in development
+				// (The maven build output, which is at /target/classes)
+				String baseDirPath = executionFile.getParentFile().getParent();
+				contentDirPath = baseDirPath + File.separator + "src" + File.separator + "main" + File.separator + "webapp";
 			}
 			else {
 				// ExecutionFile should be the .jar file, which should be directly in the contentDir.
