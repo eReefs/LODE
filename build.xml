@@ -15,8 +15,9 @@
   <property name="env.OUT_DIR" value="out"/>
   <property name="env.OUT_FILE" value="LODE-${env.IMPLEMENTATION_VERSION}"/>
   <property name="env.TEST_URL" value="http://www.essepuntato.it/2008/12/earmark"/>
-  <property name="env.TEST_PATH" value="test/earmark.rdf"/>
-  <property name="env.TEST_HTML" value="test/earmark.htm"/>
+  <property name="env.TEST_DIR" value="test"/>
+  <property name="env.TEST_PATH" value="${env.TEST_DIR}/earmark.rdf"/>
+  <property name="env.TEST_HTML" value="${env.TEST_DIR}/earmark.htm"/>
   <property name="absoluteTestPath" location="${env.TEST_PATH}"/>
   <property name="absoluteTestHtml" location="${env.TEST_HTML}"/>
 
@@ -45,12 +46,14 @@
   <target name="clean">
   	<delete dir="${env.BUILD_DIR}" />
   	<delete dir="${env.OUT_DIR}" />
+  	<delete dir="${env.TEST_DIR}/lode" />
+  	<delete file="${env.TEST_HTML}" />
   </target>
 	
   <target name="compile" depends="mvn-init,clean">
     <mkdir dir="${env.BUILD_DIR}" />
     <mkdir dir="${env.BUILD_DIR}/classes" />
-    <javac destdir="${env.BUILD_DIR}/classes" srcdir="${env.SRC_DIR}" classpathref="compile.classpath" includeantruntime="false" debug="true">
+    <javac destdir="${env.BUILD_DIR}/classes" srcdir="${env.SRC_DIR}" classpathref="compile.classpath" includeantruntime="false" failonerror="true">
       <compilerarg value="-Xlint:deprecation"/>
     </javac>
     <copy todir="${env.BUILD_DIR}/classes">
@@ -130,7 +133,7 @@
   	<available file="${env.JAR_DIR}/${env.OUT_FILE}.jar" property="jar.exists"/>
   </target>	
   <target name="do_cmd_line" depends="can_cmd_line" if="jar.exists">
-	<java jar="${env.JAR_DIR}/${env.OUT_FILE}.jar" fork="true">
+	<java jar="${env.JAR_DIR}/${env.OUT_FILE}.jar" fork="true" failonerror="true">
 	  <arg value="-url"/>
 	  <arg value="${env.TEST_URL}"/>
 	  <arg value="-path"/>
