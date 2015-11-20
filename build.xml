@@ -164,14 +164,15 @@
     	<attribute name="Implementation-Version" value="${env.IMPLEMENTATION_VERSION}"/>
     	<attribute name="Implementation-Vendor" value="${env.IMPLEMENTATION_VENDOR}"/>
     	<attribute name="Build-Date" value="${TODAY}"/>                 
-  	  	<attribute name="Main-Class" value="au.csiro.lode.LodeApp"/>
+  	  	<attribute name="Main-Class" value="it.essepuntato.lode.LodeApp"/>
   	  	<attribute name="Class-Path" value="${lib.jar.list}"/>
   	  </manifest>
   	</jar>
   	<tar destfile="${env.OUT_DIR}/${env.OUT_FILE}_cmd-line.tar.gz" basedir="${env.JAR_DIR}" compression="gzip"/>
   </target>
-  <target name="can_cmd_line">
+  <target name="can_cmd_line" depends="mvn-init">
   	<available file="${env.JAR_DIR}/${env.OUT_FILE}.jar" property="jar.exists"/>
+  	<fail message="JAR file '${env.JAR_DIR}/${env.OUT_FILE}.jar' not found." unless="jar.exists"/>
   </target>	
   <target name="do_cmd_line" depends="can_cmd_line" if="jar.exists">
 	<java jar="${env.JAR_DIR}/${env.OUT_FILE}.jar" fork="true" failonerror="true">

@@ -14,7 +14,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-package au.csiro.lode;
+package it.essepuntato.lode;
 
 import java.io.File;
 import java.io.PrintWriter;
@@ -22,8 +22,6 @@ import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.util.Map;
-
-import it.essepuntato.lode.LodeApi;
 
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
