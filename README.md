@@ -16,3 +16,21 @@ The **refactor** branch of this repository is the active one for our purposes. I
 - Supply a proper servlet 'home' page as a JSP that contains a form to submit requests to the LODE servlet, and gives documentation for how the servlet may be called using querystring parameters (i.e. without needing the proxy layer that the canonical server apparently has).
 - Add a command-line server ( **LodeCmd** class) so that the LODE API can be used without actually needing to host the servlet.
 - Add an alternate build configuration that can create an executable JAR file instead of a Tomcat-hosted WAR file.   
+
+
+
+example usage:
+
+1. launch application with
+
+	mvn clean jetty:run
+
+2. test /extract
+
+	+ DOLCE ontology
+		
+		http://localhost:8080/lode/extract?url=http://www.loa.istc.cnr.it/ontologies/DOLCE-Lite.owl
+	
+	+ photography ontology
+	
+		http://localhost:8080/lode/extract?url=http://130.88.198.11/co-ode-files/ontologies/photography.owl
