@@ -269,7 +269,7 @@ RewriteRule ^ontology$ ontology.owl [R=303]
         
         <h2>About the author</h2>
         <p>
-            <a href="http://palindrom.es/phd/whoami/">Silvio Peroni</a> (Ph.D.) is a postdoc from the University of Bologna. He maintains a <a href="http://palindrom.es/phd">blog</a> about his research.
+            <a href="http://www.essepuntato.it/">Silvio Peroni</a> (Ph.D.) is a researcher in computer science at the University of Bologna.
         </p>
     </body>
 </html>
