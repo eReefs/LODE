@@ -97,24 +97,21 @@ public class LodeApp {
 	        CommandLineParser parser = new BasicParser();
 	        CommandLine cmd = parser.parse(options, args);
 	        
-	        // Retrieve and validate the source and destination locations for the ontology files.
+	        // Retrieve and validate the destination path for the Ontology Description HTML file.
 	        String ontologyHtmlPath = cmd.getOptionValue(ontologyHtmlPathOption.getOpt());
-	        URI ontologyHtmlUri = LodeApi.getURI(ontologyHtmlPath, true);
-	        if (!LodeApi.isLocalFile(ontologyHtmlUri)){
-	        	throw new IllegalArgumentException("Invalid ontologyHtmlPath value '" + ontologyHtmlUri.toString() + "'. This parameter must be a path to a local File.");
-	        }
+	        URI ontologyHtmlUri = LodeApi.getURI(ontologyHtmlPath, LodeApi.UriPathType.Local);
 	        File ontologyHtmlFile = new File(ontologyHtmlUri);
 	        if (ontologyHtmlFile.exists() && !ontologyHtmlFile.canWrite()){
 	        	throw new IllegalArgumentException("Invalid ontologyHtmlPath value '" + ontologyHtmlUri.toString() + "'. A file already exists at that location that may not be overwritten.");	        	
 	        }
 	        
+	        // Retrieve and validate the source path for the Ontology Definition Document.
 	        String ontologyUrl = cmd.getOptionValue(ontologyUrlOption.getOpt());
 	        String ontologyPath = cmd.getOptionValue("path", null);
 	        URI ontologyDocumentUri = (ontologyPath != null && !ontologyPath.isEmpty()) ?
-	        							LodeApi.getURI(ontologyPath, true) :
-	        							LodeApi.getURI(ontologyUrl, false);
-	        
-	        	        
+	        							LodeApi.getURI(ontologyPath, LodeApi.UriPathType.Local) :
+	        							LodeApi.getURI(ontologyUrl, LodeApi.UriPathType.Remote);
+	        	        	        
 			// Locate the directory that this .jar file is deployed to.
 			URI executionUri = LodeApp.class.getProtectionDomain().getCodeSource().getLocation().toURI();
 			File executionFile = new File(executionUri);
@@ -132,16 +129,16 @@ public class LodeApp {
 			String serverFilesPath = contentDirPath + File.separator + "server";
 			String clientFilesPath = contentDirPath + File.separator + "client";
 	        
-	        // Parse the specified ontology document.
+	        // Parse the specified ontology document.  Imports may be mapped to *either* local or remote files.
 	        System.out.print("Parsing ontology definition document '" + ontologyDocumentUri.getPath() + "'... ");
 	        String ontologyImports = cmd.getOptionValue("ontologyImports", null);
-	        Map<URL, URI> ontologyImportsMap = LodeApi.parseUriMap(ontologyImports);
+	        Map<URL, URI> ontologyImportsMap = LodeApi.parseUriMap(ontologyImports, LodeApi.UriPathType.Any);
 	        
 	        boolean closure = cmd.hasOption("closure");
 	        boolean imported = cmd.hasOption("imported");
 	        boolean reasoner = cmd.hasOption("reasoner");
 	        
-	        URI pelletPropertiesUri = reasoner ? LodeApi.getURI(serverFilesPath + File.separator + "pellet.properties", true) : null;
+	        URI pelletPropertiesUri = reasoner ? LodeApi.getURI(serverFilesPath + File.separator + "pellet.properties", LodeApi.UriPathType.Local) : null;
 	        
 	        String ontologyContent = LodeApi.parseWithOWLAPI(ontologyDocumentUri, ontologyImportsMap, imported, closure, pelletPropertiesUri);
 	        System.out.print("Parsed OK. \n\n");

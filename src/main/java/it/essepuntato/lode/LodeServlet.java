@@ -55,20 +55,12 @@ public class LodeServlet extends HttpServlet {
 			String cssLocation = servletUrl + "client/";
 			String pelletPropertiesPath = context.getRealPath("server/pellet.properties");
 			String xsltPath = context.getRealPath("server/extraction.xsl");
-			boolean webOnly = new Boolean(context.getInitParameter("webOnly"));
 						
 			// Identify the URI for the Ontology definition that should be parsed,
-			// and confirm that it obeys the security restrictions configured for this servlet.
-			String ontologyUrl = request.getParameter("url");
-			String ontologyPath = request.getParameter("path");
-			
-	    	URI ontologyDocumentUri = (ontologyPath != null && !ontologyPath.isEmpty()) ?
-	    								LodeApi.getURI(ontologyPath, true) :
-	    								LodeApi.getURI(ontologyUrl, false); 			
-	    	if (LodeApi.isLocalFile(ontologyDocumentUri) && webOnly){
-	    		throw new SecurityException("Invalid ontology document path '" + ontologyDocumentUri.toString() + "'. Local file paths are not permitted in this context");
-	    	}
-	    	
+			// and confirm that it is a remote URL, not the path to a local file.
+			String ontologyUrl = request.getParameter("url");			
+	    	URI ontologyDocumentUri = LodeApi.getURI(ontologyUrl, LodeApi.UriPathType.Remote); 			
+	    		    	
 	    	// Parse the ontology document using the requested modules.
 	    	String module = request.getParameter("module");
 			boolean owlapi = ("owlapi".equalsIgnoreCase(module)) ? true : new Boolean(request.getParameter("owlapi"));
@@ -78,9 +70,12 @@ public class LodeServlet extends HttpServlet {
 			
 			String ontologyContent = "";
 	        if (owlapi || imported || closure || reasoner) {
+	        	// Imports may be mapped to remote URIs only. 
+	        	// (Local file access would be a security risk).
 	        	String ontologyImports = request.getParameter("imports");
-	        	Map<URL, URI> ontologyImportsMap = LodeApi.parseUriMap(ontologyImports);
-	        	URI pelletPropertiesUri = reasoner ? LodeApi.getURI(pelletPropertiesPath, true) : null;
+	        	Map<URL, URI> ontologyImportsMap = LodeApi.parseUriMap(ontologyImports, LodeApi.UriPathType.Remote);
+	        	
+	        	URI pelletPropertiesUri = reasoner ? LodeApi.getURI(pelletPropertiesPath, LodeApi.UriPathType.Local) : null;
 	        	ontologyContent = LodeApi.parseWithOWLAPI(ontologyDocumentUri, ontologyImportsMap, imported, closure, pelletPropertiesUri);
 	        } 
 	        else {
@@ -94,8 +89,7 @@ public class LodeServlet extends HttpServlet {
 			if (lodeBase == null || lodeBase.isEmpty()){
 				// No override for the lodeBase parameter has been provided. 
 				// Use the current LODE instance, with the owlapi parameter turned on.
-				String servletBase = request.getRequestURL().toString().replaceAll("/[\\w|\\.]+$", "/");
-				lodeBase = servletBase + "extract?owlapi=true&url=";
+				lodeBase = servletUrl + "extract?owlapi=true&url=";
 			}
 			
 			result = LodeApi.transformOntology(ontologyContent, ontologyUrl, ontologySourceUrl, cssLocation, lang, xsltPath, lodeBase);

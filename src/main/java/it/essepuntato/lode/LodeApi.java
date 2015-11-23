@@ -85,6 +85,11 @@ import com.clarkparsia.pellet.owlapiv3.PelletReasonerFactory;
  */
 public class LodeApi {
 	    
+	public enum UriPathType {
+		Local,
+		Remote,
+		Any,
+	}
     public static String parseSimple(URI ontologyUri) throws IOException, URISyntaxException{
     	SourceExtractor extractor = new SourceExtractor();
         extractor.addMimeTypes(MimeType.mimeTypes);
@@ -279,43 +284,57 @@ public class LodeApi {
 		return result;
 	}
 	
-	public static URI getURI(String path, boolean defaultIsLocal) throws URISyntaxException {
-		String uri = path.replaceAll("\\s", "%20");
+	public static URI getURI(String path, UriPathType pathType) throws URISyntaxException, SecurityException {
+		String realPath = path.replaceAll("\\s", "%20");
 		if (File.separatorChar != '/' ){
 			// Windows.
-			uri = uri.replace(File.separatorChar, '/');
-			if (uri.matches("^[A-Z]:/.+")){
+			realPath = realPath.replace(File.separatorChar, '/');
+			if (realPath.matches("^[A-Z]:/.+")){
 				// Definitely an absolute local Windows file path.
-				uri = "file:///" + uri;
+				realPath = "file:///" + realPath;
 			}
-			else if (uri.matches("^//.+")){
+			else if (realPath.matches("^//.+")){
 				// Definitely an absolute Windows UNC path.
-				uri = "file://" + uri.replaceAll("^//", "");
+				realPath = "file://" + realPath.replaceAll("^//", "");
 			}
 		}
 		else {
 			// Posix file system
-			if (path.matches("^/.+") && defaultIsLocal){
+			if (path.matches("^/.+") && pathType != UriPathType.Remote ){
 				// Treat paths starting with '/' as absolute file paths, rather than app-relative URLs.
-				uri = "file://" + uri;
+				realPath = "file://" + realPath;
 			}
 		}
-		return new URI(uri);
-	}
-    public static boolean isLocalFile(URI uri) {
-    	String scheme = uri.getScheme();
+		URI uri = new URI(realPath);
+
+		String scheme = uri.getScheme();
     	String host = uri.getHost();
-    	return "file".equalsIgnoreCase(scheme) && (host == null || host.isEmpty());
-    }
+		boolean isLocal = ("file".equalsIgnoreCase(scheme) || host == null || host.isEmpty());
+		switch(pathType){
+		case Remote:
+			if (isLocal){
+				throw new SecurityException("Invalid URI path '" + path.toString() + "'. Only absolute URLs are permitted.");
+			}
+			break;
+		case Local:
+			if (!isLocal){
+				throw new SecurityException("Invalid URI path '" + path.toString() + "'. Only local file paths are permitted.");
+			}
+			break;
+		default:
+			// Don't care whether the path is local or remote.
+		}
+		return uri;
+	}
     
-    public static Map<URL, URI> parseUriMap(String mapText) throws MalformedURLException, URISyntaxException{
+    public static Map<URL, URI> parseUriMap(String mapText, UriPathType pathType) throws MalformedURLException, URISyntaxException, SecurityException {
     	Map<URL, URI> map = null;
     	if (mapText != null && !mapText.isEmpty()){
     		map = new HashMap<URL, URI>();
     		String[] mapEntries = mapText.split("\\||\\n");
     		for(String mapEntry : mapEntries){
     			String[] entryParts = mapEntry.split("=", 2);
-    			map.put(new URL(entryParts[0]), getURI(entryParts[1], true));
+    			map.put(new URL(entryParts[0]), getURI(entryParts[1], pathType));
     		}
     	}
     	return map;
