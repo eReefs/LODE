@@ -90,7 +90,15 @@ public class LodeServlet extends HttpServlet {
 			// Transform the ontology.
 			String ontologySourceUrl = servletUrl + "source?url=" + ontologyUrl;	// Calls the 'source' servlet in this webapp for this ontology definition.
 			String lang = request.getParameter("lang");	// null => 'en'.
-			result = LodeApi.transformOntology(ontologyContent, ontologyUrl, ontologySourceUrl, cssLocation, lang, xsltPath);
+			String lodeBase = context.getInitParameter("lodeBase");
+			if (lodeBase == null || lodeBase.isEmpty()){
+				// No override for the lodeBase parameter has been provided. 
+				// Use the current LODE instance, with the owlapi parameter turned on.
+				String servletBase = request.getRequestURL().toString().replaceAll("/[\\w|\\.]+$", "/");
+				lodeBase = servletBase + "extract?owlapi=true&url=";
+			}
+			
+			result = LodeApi.transformOntology(ontologyContent, ontologyUrl, ontologySourceUrl, cssLocation, lang, xsltPath, lodeBase);
 		}
 		catch (Exception e) {
 			result = getErrorPage(e);

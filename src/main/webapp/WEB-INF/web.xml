@@ -13,6 +13,11 @@
 		<welcome-file>default.jsp</welcome-file>
 	</welcome-file-list>
 	<context-param>
+      <param-name>lodeBase</param-name>
+      <param-value></param-value>
+      <description>The base URL to which the ontology URL should be appended for any 'Visualise it with LODE' links.</description>
+    </context-param>
+	<context-param>
       <param-name>webOnly</param-name>
       <param-value>true</param-value>
       <description>Whether local file paths may be transformed and returned. Setting this to true is a security risk.</description>

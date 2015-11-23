@@ -243,7 +243,8 @@ public class LodeApi {
 		String ontologySourceUrl, 
 		String cssLocation, 
 		String lang,
-		String xsltPath) 
+		String xsltPath,
+		String lodeBase) 
 	throws TransformerException, IOException{
 		
 		// Validate Parameters.
@@ -264,6 +265,7 @@ public class LodeApi {
 		transformer.setParameter("css-location", useCss);
 		transformer.setParameter("lang", useLang);
 		transformer.setParameter("ontology-url", ontologyUrl);
+		transformer.setParameter("lode-base", lodeBase);
 		transformer.setParameter("source", useSource);
 		
 		// Use the XSLT to transform the Ontology Definition.

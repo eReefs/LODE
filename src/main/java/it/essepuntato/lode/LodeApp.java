@@ -75,6 +75,12 @@ public class LodeApp {
 											 .isRequired(false)
 											 .create("lang");
 		
+		Option lodeBaseOption = OptionBuilder.withArgName("lodeBase")
+				 .withDescription("Optional: The base URL to which the ontology URL should be appended for any 'Visualise with Lode' links.")
+				 .hasArg()
+				 .isRequired(false)
+				 .create("lodeBase");
+		
         options.addOption(ontologyHtmlPathOption);
         options.addOption(ontologyUrlOption);
         options.addOption(ontologyPathOption);
@@ -84,6 +90,7 @@ public class LodeApp {
         options.addOption("reasoner", false, "Optional: When specified, the assertions inferable from ontology-url using the Pellet reasoner will be added to the HTML description of the ontology. Note that, depending upon the nature of your ontology, this computationally intensive function can be very time-consuming.");
         options.addOption(ontologySourceOption);
         options.addOption(languageOption);
+        options.addOption(lodeBaseOption);
 
 		try {
 			// Parse the command line.
@@ -177,8 +184,9 @@ public class LodeApp {
 	        String cssLocation = "lode/";
 	        String xsltPath = serverFilesPath + File.separator + "extraction.xsl";
 	        String lang = cmd.getOptionValue("lang", null);
+	        String lodeBase = cmd.getOptionValue("lodeBase", "http://www.essepuntato.it/lode/owlapi/");
 
-	        String ontologyHtml = LodeApi.transformOntology(ontologyContent, ontologyUrl, ontologySourceUrl, cssLocation, lang, xsltPath);
+	        String ontologyHtml = LodeApi.transformOntology(ontologyContent, ontologyUrl, ontologySourceUrl, cssLocation, lang, xsltPath, lodeBase);
 	        System.out.print("Transformation succeeded.\n\n");
 	        		
 	        // Save the resulting document to the requested file.
