@@ -8,7 +8,10 @@
 	<url>http://www.essepuntato.it/lode</url>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<vendor>Silvio Peroni, Department of Computer Science and Engineering, University of Bologna</vendor>
+		<vendor-name>Silvio Peroni</vendor-name>
+		<vendor-url>http://www.essepuntato.it</vendor-url>
+		<source-base>http://eelst.cs.unibo.it/apps/LODE/source?url=</source-base>
+		<vis-base>http://www.essepuntato.it/lode/owlapi/</vis-base>	
 	</properties>
 
 	<dependencies>
