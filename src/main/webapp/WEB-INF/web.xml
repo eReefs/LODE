@@ -12,10 +12,16 @@
 		<welcome-file>default.htm</welcome-file>
 		<welcome-file>default.jsp</welcome-file>
 	</welcome-file-list>
-	<context-param>
-      <param-name>lodeBase</param-name>
+    <context-param>
+      <param-name>sourceBase</param-name>
       <param-value></param-value>
-      <description>The base URL to which the ontology URL should be appended for any 'Visualise it with LODE' links.</description>
+      <description>The base URL to which an ontology URL can be appended to reference the ontology definiton source.</description>
+    </context-param>
+    <context-param>
+      <param-name>visBase</param-name>
+      <param-value></param-value>
+      <description>The base URL to which an ontology URL can be appended to generate an ontology description.</description>
+    </context-param>
     </context-param>
 	<servlet>
 		<description></description>
