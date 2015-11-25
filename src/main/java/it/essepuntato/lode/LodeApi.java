@@ -16,23 +16,22 @@
 package it.essepuntato.lode;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringReader;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
+import javax.servlet.ServletContext;
 import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
@@ -58,11 +57,9 @@ import org.semanticweb.owlapi.model.OWLImportsDeclaration;
 import org.semanticweb.owlapi.model.OWLNamedIndividual;
 import org.semanticweb.owlapi.model.OWLObjectProperty;
 import org.semanticweb.owlapi.model.OWLOntology;
-import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyID;
 import org.semanticweb.owlapi.model.OWLOntologyLoaderConfiguration;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
-import org.semanticweb.owlapi.model.OWLOntologyStorageException;
 import org.semanticweb.owlapi.util.InferredAxiomGenerator;
 import org.semanticweb.owlapi.util.InferredClassAssertionAxiomGenerator;
 import org.semanticweb.owlapi.util.InferredDisjointClassesAxiomGenerator;
@@ -82,153 +79,128 @@ import com.clarkparsia.pellet.owlapiv3.PelletReasonerFactory;
 
 /**
  * LODE API Class
+ * Encapsulates the LODE functionality which is independent of the type of application.
  */
 public class LodeApi {
-	    
-	public enum UriPathType {
-		Local,
-		Remote,
-		Any,
-	}
-    public static String parseSimple(URI ontologyUri) throws IOException, URISyntaxException{
-    	SourceExtractor extractor = new SourceExtractor();
-        extractor.addMimeTypes(MimeType.mimeTypes);
-    	String content = extractor.getContent(ontologyUri);
-    	return content;
-    }
-
-	public static String parseWithOWLAPI(
-		URI ontologyUri,
-		Map<URL, URI> ontologyMap,
-		boolean considerImportedOntologies, 
-		boolean considerImportedClosure,
-		URI pelletPropertiesUri 
-	) throws URISyntaxException, OWLOntologyCreationException, OWLOntologyStorageException  {
-				
-		OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
-		if (ontologyMap != null){
-			for (Map.Entry<URL,URI> mapEntry : ontologyMap.entrySet()){
-				manager.addIRIMapper(new SimpleIRIMapper(IRI.create(mapEntry.getKey()), IRI.create(mapEntry.getValue())));
-			}
-		}
-				
-		IRI ontologyIri = IRI.create(ontologyUri);
-		HttpURLConnection.setFollowRedirects(true);
-		OWLOntology ontology = null;
-					
-		if (considerImportedClosure || considerImportedOntologies) {
-			ontology = manager.loadOntology(ontologyIri);
-			Set<OWLOntology> setOfImportedOntologies = new HashSet<OWLOntology>();
-			if (considerImportedOntologies) {
-				setOfImportedOntologies.addAll(ontology.getDirectImports());
-			} else {
-				setOfImportedOntologies.addAll(ontology.getImportsClosure());
-			}
-			for (OWLOntology importedOntology : setOfImportedOntologies) {
-				manager.addAxioms(ontology, importedOntology.getAxioms());
-			}
-		} 
-		else {
-			IRIDocumentSource source = new IRIDocumentSource(ontologyIri);
-			OWLOntologyLoaderConfiguration config = new OWLOntologyLoaderConfiguration().setMissingImportHandlingStrategy(MissingImportHandlingStrategy.SILENT);
-			ontology = manager.loadOntologyFromOntologyDocument(source, config);
-		}
-		
-		if (pelletPropertiesUri != null) {
-			ontology = parseWithReasoner(pelletPropertiesUri, manager, ontology);
-		}
-			
-		StringDocumentTarget parsedOntology = new StringDocumentTarget();
-		manager.saveOntology(ontology, new RDFXMLOntologyFormat(), parsedOntology);
-		String result = parsedOntology.toString();
-		return result;
-	}
+	/* Properties to be read from the local manifest. */
+	public final String defaultSourceBase;
+	public final String defaultVisBase;
 	
+	/* Properties that depend on LODE deployment */
+	public final String xsltPath;
+	public final URI pelletPropertiesUri;
+	public final UriHelper.UriPathType definitionPathType;
+	public final String userAgent;
+	public final String cssBase;
+	public final String sourceBase;
+	public final String visBase;
 
-	public static OWLOntology parseWithReasoner(
-		URI pelletPropertiesUri,
-		OWLOntologyManager manager, 
-		OWLOntology ontology
-	) {
-		try {
-			PelletOptions.load(pelletPropertiesUri.toURL());
-			PelletReasoner reasoner = PelletReasonerFactory.getInstance().createReasoner(ontology);
-			reasoner.getKB().prepare();
-			List<InferredAxiomGenerator<? extends OWLAxiom>> generators = new ArrayList<InferredAxiomGenerator<? extends OWLAxiom>>();
-	        generators.add(new InferredSubClassAxiomGenerator());
-	        generators.add(new InferredClassAssertionAxiomGenerator());
-	        generators.add(new InferredDisjointClassesAxiomGenerator());
-	        generators.add(new InferredEquivalentClassAxiomGenerator());
-	        generators.add(new InferredEquivalentDataPropertiesAxiomGenerator());
-	        generators.add(new InferredEquivalentObjectPropertyAxiomGenerator());
-	        generators.add(new InferredInverseObjectPropertiesAxiomGenerator());
-	        generators.add(new InferredPropertyAssertionGenerator());
-	        generators.add(new InferredSubDataPropertyAxiomGenerator());
-	        generators.add(new InferredSubObjectPropertyAxiomGenerator());
-	        
-	        InferredOntologyGenerator iog = new InferredOntologyGenerator(reasoner, generators);
-			
-			OWLOntologyID id = ontology.getOntologyID();
-			Set<OWLImportsDeclaration> declarations = ontology.getImportsDeclarations();
-	        Set<OWLAnnotation> annotations = ontology.getAnnotations();
-	        
-	        Map<OWLEntity, Set<OWLAnnotationAssertionAxiom>> entityAnnotations = new HashMap<OWLEntity,Set<OWLAnnotationAssertionAxiom>>();
-	        for (OWLClass aEntity  : ontology.getClassesInSignature()) {
-	        	entityAnnotations.put(aEntity, aEntity.getAnnotationAssertionAxioms(ontology));
-	        }
-	        for (OWLObjectProperty aEntity : ontology.getObjectPropertiesInSignature()) {
-	        	entityAnnotations.put(aEntity, aEntity.getAnnotationAssertionAxioms(ontology));
-	        }
-	        for (OWLDataProperty aEntity : ontology.getDataPropertiesInSignature()) {
-	        	entityAnnotations.put(aEntity, aEntity.getAnnotationAssertionAxioms(ontology));
-	        }
-	        for (OWLNamedIndividual aEntity : ontology.getIndividualsInSignature()) {
-	        	entityAnnotations.put(aEntity, aEntity.getAnnotationAssertionAxioms(ontology));
-	        }
-	        for (OWLAnnotationProperty aEntity : ontology.getAnnotationPropertiesInSignature()) {
-	        	entityAnnotations.put(aEntity, aEntity.getAnnotationAssertionAxioms(ontology));
-	        }
-	        for (OWLDatatype aEntity : ontology.getDatatypesInSignature()) {
-	        	entityAnnotations.put(aEntity, aEntity.getAnnotationAssertionAxioms(ontology));
-	        }
-	        
-	        manager.removeOntology(ontology);
-	        OWLOntology inferred = manager.createOntology(id);
-			iog.fillOntology(manager, inferred);
-			
-			for (OWLImportsDeclaration decl : declarations) {
-	        	manager.applyChange(new AddImport(inferred, decl));
-	        }
-	        for (OWLAnnotation ann : annotations) {
-	        	manager.applyChange(new AddOntologyAnnotation(inferred, ann));
-	        }
-	        for (OWLClass aEntity : inferred.getClassesInSignature()) {
-	        	applyAnnotations(aEntity, entityAnnotations, manager, inferred);
-	        }
-	        for (OWLObjectProperty aEntity : inferred.getObjectPropertiesInSignature()) {
-	        	applyAnnotations(aEntity, entityAnnotations, manager, inferred);
-	        }
-	        for (OWLDataProperty aEntity : inferred.getDataPropertiesInSignature()) {
-	        	applyAnnotations(aEntity, entityAnnotations, manager, inferred);
-	        }
-	        for (OWLNamedIndividual aEntity : inferred.getIndividualsInSignature()) {
-	        	applyAnnotations(aEntity, entityAnnotations, manager, inferred);
-	        }
-	        for (OWLAnnotationProperty aEntity : inferred.getAnnotationPropertiesInSignature()) {
-	        	applyAnnotations(aEntity, entityAnnotations, manager, inferred);
-	        }
-	        for (OWLDatatype aEntity : inferred.getDatatypesInSignature()) {
-	        	applyAnnotations(aEntity, entityAnnotations, manager, inferred);
-	        }
-	        
-			return inferred;
-		} 
-		catch (IOException | OWLOntologyCreationException e) {
-			return ontology;
-		}
-	}
+	/* Useful constants */
+	public final int maxRedirects = 50;
 
-	public static void applyAnnotations(
+	public final String[] mimeTypes = {
+		"application/rdf+xml" ,
+		"text/turtle" , 
+		"application/x-turtle",
+		"text/xml" ,
+		"text/plain", 
+		"*/*"
+	};
+	public final String[] languages = {
+	    "en",
+		"fr",
+		"it"
+	};
+	
+    /**
+     * Initialising constructor for the {@link LodeApi} type.
+     * @param serverDirPath			The local filesystem location that contains the stylesheets and translation dictionaries.
+     * @param allowLocalDefinitions	Whether this LODE instance is permitted to read ontology definitions from the local filesystem.
+     * @param userAgent				The user agent string that should identify this application when downloading ontology definitions. 
+     * @param cssBase				The base URL from which ontology descriptions should reference client-side resources like stylesheets.
+     * 								Use null if client files have the same web-path as generated ontology descriptions.
+     * @param sourceBase			The base URL to which an ontology-definition URL can be appended in order to reference the plain-text
+     * 								source of the definition. Use null to skip generating source links in ontology descriptions this way.
+     * @param visBase				The base URL to which an ontology-definition URL can be appended in order to reference a LODE-generated 
+     * 								description of that ontology. Use null to skip generating 'Visualise it with LODE' links in ontology descriptions.
+     * @throws LodeException		If any of the parameters are invalid.
+     */
+    public LodeApi(
+    		String resourcePath, 
+    		boolean allowLocalDefinitions,
+    		String userAgent,
+    		String cssBase,
+    		String sourceBase,
+    		String visBase
+    	) throws LodeException {
+    	
+    	try {   		
+    		// Parse manifest properties.
+    		URI manifestUri = UriHelper.validateURI(resourcePath + "/META-INF/MANIFEST.MF", UriHelper.UriPathType.Filesystem, false, "Invalid Manifest Path");
+     		try (InputStream manifestStream = manifestUri.toURL().openStream() ){
+        		Properties prop = new java.util.Properties();
+        		prop.load(manifestStream);
+        		this.defaultSourceBase = prop.getProperty("Source-Base");
+        		this.defaultVisBase = prop.getProperty("Vis-Base");
+    		}
+    		
+     		// Validate and cache deployment-specific properties.
+     		this.xsltPath = UriHelper.validatePath(resourcePath +  "/server/extraction.xsl", UriHelper.UriPathType.Filesystem, false, "Invalid XSLT path");
+        	this.pelletPropertiesUri = UriHelper.validateURI(resourcePath + "/server/pellet.properties",  UriHelper.UriPathType.Filesystem, false, "Invalid pellet.properties path");
+        	this.definitionPathType = allowLocalDefinitions ? UriHelper.UriPathType.Any : UriHelper.UriPathType.WebAbsolute;
+        	this.userAgent = userAgent;
+    		this.cssBase = UriHelper.validatePath(cssBase.replaceAll("([^\\/])$", "$1/"), UriHelper.UriPathType.WebAny, false, "Invalid CSS base URL");
+ 
+    		String useSourceBase = UriHelper.validatePath(sourceBase, UriHelper.UriPathType.WebAny, true, "Invalid Source link base URL");
+    		this.sourceBase = useSourceBase.isEmpty() ? this.defaultSourceBase : useSourceBase;
+
+    		String useVisBase = UriHelper.validatePath(visBase, UriHelper.UriPathType.WebAny, true, "Invalid Visualise link base URL");
+    		this.visBase = useVisBase.isEmpty() ? this.defaultVisBase : useVisBase;     	
+    	}
+    	catch(Exception ex){
+    		throw new LodeException(ex);
+    	}
+    }
+    
+    /**
+     * Initialising constructor for the {@link LodeApi} type in a web-application context.
+     * This derives all base paths and URLs from the context properties, and does NOT
+     * permit ontology definitions to be read directly from the local filesystem, since
+     * that would be a horrible security risk.
+     * @param context					information about the web application environment.
+     * @throws NumberFormatException	if the maxRedirects context parameter is non-numeric.
+     * @throws LodeException			if any of the derived context properties are invalid.
+     */
+    public LodeApi(ServletContext context, String userAgent) throws NumberFormatException, LodeException{
+		this( context.getRealPath("."), 
+			false, 
+			userAgent,
+			"client/",
+			context.getInitParameter("sourceBase").isEmpty() ? "source?url=" : context.getInitParameter("sourceBase"),
+			context.getInitParameter("visBase").isEmpty() ? "extract?owlapi=true&url=" : context.getInitParameter("visBase")					
+		);
+    }
+    
+    
+    /**
+     * Read or download the contents of an ontology definition into a String.
+     * This function does NOT make any attempt to parse or validate the ontology definition.
+     * @param ontologyPath		The local path or remote URL for the ontology definition to read.
+     * @return					A string containing the contents of the ontology definition.
+     * @throws LodeException	If the ontology definition cannot be read.
+     */
+    public String getOntologySource(String ontologyPath) throws LodeException{
+    	try {
+    		URI uri = UriHelper.validateURI(ontologyPath, this.definitionPathType, false, "Invalid Ontology Source URI");
+    		String content = UriHelper.getSource(uri, Arrays.asList(this.mimeTypes), this.userAgent, this.maxRedirects);
+    		return content;
+    	}
+    	catch(Exception ex){
+    		throw new LodeException(ex);
+    	}
+    }
+    
+	private static void applyAnnotations(
 		OWLEntity aEntity, 
 		Map<OWLEntity, Set<OWLAnnotationAssertionAxiom>> entityAnnotations, 
 		OWLOntologyManager manager, 
@@ -241,102 +213,236 @@ public class LodeApi {
     		}
     	}
 	}
-	
-	public static String transformOntology(
+    
+	/**
+	 * Parse an Ontology Definition document using the [OWLAPI](http://owlapi.sourceforge.net/) to linearize it in standard RDF/XML format.
+	 * @param ontologyPath	The location of the ontology definition document to be parsed.
+	 * @param imports		An optional mapping of imported ontology definition URIs to alternate locations from which
+	 * 						those imported definitions should be read. 
+	 * @param imported		Whether the axioms contained in any imported ontologies should be included. 
+	 * @param closure		Whether the transitive closure given by considering any imported ontologies should be included.
+	 * 						The closure parameter is ignored if imported is true.
+	 * @param reasoner		Whether the assertions inferable from the ontology definition using the [Pellet reasoner](http://clarkparsia.com/pellet) 
+	 * 						should be included. Note that this can be very time-consuming.
+	 * @return the read/downloaded and parsed ontology definition in standard RDF/XML format.
+	 * @throws LodeException
+	 */
+	public String parseOntology(
+		String ontologyPath,
+		String imports,
+		boolean imported, 
+		boolean closure,
+		boolean reasoner 
+	) throws LodeException{
+		try {
+			OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
+			
+			Map<URL, URI> ontologyImports = UriHelper.parseUriMap(imports, this.definitionPathType);
+			if (ontologyImports != null){
+				for (Map.Entry<URL,URI> mapEntry : ontologyImports.entrySet()){
+					manager.addIRIMapper(new SimpleIRIMapper(IRI.create(mapEntry.getKey()), IRI.create(mapEntry.getValue())));
+				}
+			}
+					
+			URI ontologyUri = UriHelper.validateURI(ontologyPath, this.definitionPathType, false, "Invalid Ontology Definition URI");
+			IRI ontologyIri = IRI.create(ontologyUri);
+			HttpURLConnection.setFollowRedirects(true);
+			OWLOntology ontology = null;
+					
+			if (imported){
+				// We want to consider the imported ontology definitions when parsing.
+				ontology = manager.loadOntology(ontologyIri);
+				Set<OWLOntology> importedOntologies = new HashSet<OWLOntology>();
+				importedOntologies.addAll(ontology.getDirectImports());
+				for (OWLOntology importedOntology : importedOntologies) {
+					manager.addAxioms(ontology, importedOntology.getAxioms());
+				}
+			}
+			else if (closure){
+				// Consider the imported ontology closures when parsing.
+				ontology = manager.loadOntology(ontologyIri);
+				Set<OWLOntology> importedClosures = new HashSet<OWLOntology>();
+				importedClosures.addAll(ontology.getImportsClosure());
+				for (OWLOntology importedClosure : importedClosures) {
+					manager.addAxioms(ontology, importedClosure.getAxioms());
+				}
+			} 
+			else {
+				// Ignore the imported ontologies when parsing.
+				IRIDocumentSource source = new IRIDocumentSource(ontologyIri);
+				OWLOntologyLoaderConfiguration config = new OWLOntologyLoaderConfiguration().setMissingImportHandlingStrategy(MissingImportHandlingStrategy.SILENT);
+				ontology = manager.loadOntologyFromOntologyDocument(source, config);
+			}
+			
+			StringDocumentTarget parsedOntology = new StringDocumentTarget();        	
+        	if (reasoner){
+        		
+    			PelletOptions.load(this.pelletPropertiesUri.toURL());
+    			PelletReasoner pelletReasoner = PelletReasonerFactory.getInstance().createReasoner(ontology);
+    			pelletReasoner.getKB().prepare();
+    			List<InferredAxiomGenerator<? extends OWLAxiom>> generators = new ArrayList<InferredAxiomGenerator<? extends OWLAxiom>>();
+    	        generators.add(new InferredSubClassAxiomGenerator());
+    	        generators.add(new InferredClassAssertionAxiomGenerator());
+    	        generators.add(new InferredDisjointClassesAxiomGenerator());
+    	        generators.add(new InferredEquivalentClassAxiomGenerator());
+    	        generators.add(new InferredEquivalentDataPropertiesAxiomGenerator());
+    	        generators.add(new InferredEquivalentObjectPropertyAxiomGenerator());
+    	        generators.add(new InferredInverseObjectPropertiesAxiomGenerator());
+    	        generators.add(new InferredPropertyAssertionGenerator());
+    	        generators.add(new InferredSubDataPropertyAxiomGenerator());
+    	        generators.add(new InferredSubObjectPropertyAxiomGenerator());
+    	        
+    	        InferredOntologyGenerator iog = new InferredOntologyGenerator(pelletReasoner, generators);
+    			
+    			OWLOntologyID id = ontology.getOntologyID();
+    			Set<OWLImportsDeclaration> declarations = ontology.getImportsDeclarations();
+    	        Set<OWLAnnotation> annotations = ontology.getAnnotations();
+    	        
+    	        Map<OWLEntity, Set<OWLAnnotationAssertionAxiom>> entityAnnotations = new HashMap<OWLEntity,Set<OWLAnnotationAssertionAxiom>>();
+    	        for (OWLClass aEntity  : ontology.getClassesInSignature()) {
+    	        	entityAnnotations.put(aEntity, aEntity.getAnnotationAssertionAxioms(ontology));
+    	        }
+    	        for (OWLObjectProperty aEntity : ontology.getObjectPropertiesInSignature()) {
+    	        	entityAnnotations.put(aEntity, aEntity.getAnnotationAssertionAxioms(ontology));
+    	        }
+    	        for (OWLDataProperty aEntity : ontology.getDataPropertiesInSignature()) {
+    	        	entityAnnotations.put(aEntity, aEntity.getAnnotationAssertionAxioms(ontology));
+    	        }
+    	        for (OWLNamedIndividual aEntity : ontology.getIndividualsInSignature()) {
+    	        	entityAnnotations.put(aEntity, aEntity.getAnnotationAssertionAxioms(ontology));
+    	        }
+    	        for (OWLAnnotationProperty aEntity : ontology.getAnnotationPropertiesInSignature()) {
+    	        	entityAnnotations.put(aEntity, aEntity.getAnnotationAssertionAxioms(ontology));
+    	        }
+    	        for (OWLDatatype aEntity : ontology.getDatatypesInSignature()) {
+    	        	entityAnnotations.put(aEntity, aEntity.getAnnotationAssertionAxioms(ontology));
+    	        }
+    	        
+    	        manager.removeOntology(ontology);
+    	        OWLOntology inferred = manager.createOntology(id);
+    			iog.fillOntology(manager, inferred);
+    			
+    			for (OWLImportsDeclaration decl : declarations) {
+    	        	manager.applyChange(new AddImport(inferred, decl));
+    	        }
+    	        for (OWLAnnotation ann : annotations) {
+    	        	manager.applyChange(new AddOntologyAnnotation(inferred, ann));
+    	        }
+    	        for (OWLClass aEntity : inferred.getClassesInSignature()) {
+    	        	applyAnnotations(aEntity, entityAnnotations, manager, inferred);
+    	        }
+    	        for (OWLObjectProperty aEntity : inferred.getObjectPropertiesInSignature()) {
+    	        	applyAnnotations(aEntity, entityAnnotations, manager, inferred);
+    	        }
+    	        for (OWLDataProperty aEntity : inferred.getDataPropertiesInSignature()) {
+    	        	applyAnnotations(aEntity, entityAnnotations, manager, inferred);
+    	        }
+    	        for (OWLNamedIndividual aEntity : inferred.getIndividualsInSignature()) {
+    	        	applyAnnotations(aEntity, entityAnnotations, manager, inferred);
+    	        }
+    	        for (OWLAnnotationProperty aEntity : inferred.getAnnotationPropertiesInSignature()) {
+    	        	applyAnnotations(aEntity, entityAnnotations, manager, inferred);
+    	        }
+    	        for (OWLDatatype aEntity : inferred.getDatatypesInSignature()) {
+    	        	applyAnnotations(aEntity, entityAnnotations, manager, inferred);
+    	        }
+    	        
+				manager.saveOntology(inferred, new RDFXMLOntologyFormat(), parsedOntology);
+        	}
+        	else {
+				manager.saveOntology(ontology, new RDFXMLOntologyFormat(), parsedOntology);
+        	}
+        	return parsedOntology.toString();
+		}
+		catch (Exception ex){
+			throw new LodeException(ex);
+		}
+	}
+
+	/**
+	 * Generates an HTML-formatted description for an ontology definition.
+	 * @param ontologyContent	The text of the ontology definition.
+	 * @param ontologyUrl		The canonical URL (IRI) from which the ontology definition is/will be accessible.
+	 * @param sourceUrl			The URL at which the plain-text source of the ontology definition can be accessed from.
+	 * 							If this is null or empty, then the ontologyUrl will be appended to the sourceBase class property.
+	 * @param lang				The code for the language which should be used for the ontology description.
+	 * 							If this is null or empty, then English will be used.
+	 * @return
+	 * @throws LodeException
+	 */
+	public String transformOntology(
 		String ontologyContent, 
 		String ontologyUrl, 
-		String ontologySourceUrl, 
-		String cssLocation, 
-		String lang,
-		String xsltPath,
-		String lodeBase) 
-	throws TransformerException, IOException{
-		
-		// Validate Parameters.
-		if (ontologyContent == null || ontologyContent.isEmpty()){
-			throw new IllegalArgumentException("The ontologyContent parameter may not be null or empty: you must pass in something to transform!");
-		}
-		if (ontologyUrl == null || ontologyUrl.isEmpty()){
-			throw new IllegalArgumentException("The ontologyUrl parameter may not be null or empty");
-		}
-		String useSource = (ontologySourceUrl == null || ontologySourceUrl.isEmpty()) ? ontologyUrl : ontologySourceUrl;
-		String useCss = (cssLocation == null || cssLocation.isEmpty()) ? "./" : cssLocation;
-		String useLang = (lang == null || lang.isEmpty()) ? "en" : lang; 
-		
-		// Load and parse the XSLT.
-		StreamSource xsltSource = new StreamSource(xsltPath);
-		TransformerFactory tfactory = new net.sf.saxon.TransformerFactoryImpl();
-		Transformer transformer = tfactory.newTransformer(xsltSource);
-		transformer.setParameter("css-location", useCss);
-		transformer.setParameter("lang", useLang);
-		transformer.setParameter("ontology-url", ontologyUrl);
-		transformer.setParameter("lode-base", lodeBase);
-		transformer.setParameter("source", useSource);
-		
-		// Use the XSLT to transform the Ontology Definition.
-		String result = null;
-		try (StringReader ontologyReader = new StringReader(ontologyContent)){
-			try(ByteArrayOutputStream output = new ByteArrayOutputStream()){
-				transformer.transform(new StreamSource(ontologyReader), new StreamResult(output));
-				result = output.toString();
+		String sourceUrl, 
+		String lang
+	) throws LodeException {
+		try {
+			// Validate Parameters.
+			UriHelper.validateURI(ontologyUrl, UriHelper.UriPathType.WebAbsolute, false, "Invalid ontologyUrl Parameter");
+			String useSource = UriHelper.validatePath(sourceUrl, UriHelper.UriPathType.WebAny, true, "Invalid sourceUrl Parameter");
+			if (useSource.isEmpty()){
+				useSource = this.sourceBase + ontologyUrl;
 			}
+			String useLang = null;
+			if (lang == null || lang.isEmpty()){
+				useLang = this.languages[0];
+			}
+			else {
+				for (String okLang : this.languages){
+					if (okLang.equalsIgnoreCase(lang)){
+						useLang = okLang;
+						break;
+					}
+				}
+				if (useLang == null){
+					throw new IllegalArgumentException("Invalid lang parameter '" + lang + "'. Supported language codes are " + String.join(", ", this.languages));
+				}
+			}
+					
+			// Load and parse the XSLT.
+			StreamSource xsltSource = new StreamSource(xsltPath);
+			TransformerFactory tfactory = new net.sf.saxon.TransformerFactoryImpl();
+			Transformer transformer = tfactory.newTransformer(xsltSource);
+			transformer.setParameter("css-location", this.cssBase);
+			transformer.setParameter("lang", useLang);
+			transformer.setParameter("lode-base", this.visBase);
+			transformer.setParameter("ontology-url", ontologyUrl);
+			transformer.setParameter("source", useSource);
+			
+			// Use the XSLT to transform the Ontology Definition.
+			String result = null;
+			try (StringReader ontologyReader = new StringReader(ontologyContent)){
+				try(ByteArrayOutputStream output = new ByteArrayOutputStream()){
+					transformer.transform(new StreamSource(ontologyReader), new StreamResult(output));
+					result = output.toString();
+				}
+			}
+			return result;
 		}
-		return result;
+		catch(Exception ex){
+			throw new LodeException (ex);					
+		}
 	}
 	
-	public static URI getURI(String path, UriPathType pathType) throws URISyntaxException, SecurityException {
-		String realPath = path.replaceAll("\\s", "%20");
-		if (File.separatorChar != '/' ){
-			// Windows.
-			realPath = realPath.replace(File.separatorChar, '/');
-			if (realPath.matches("^[A-Z]:/.+")){
-				// Definitely an absolute local Windows file path.
-				realPath = "file:///" + realPath;
-			}
-			else if (realPath.matches("^//.+")){
-				// Definitely an absolute Windows UNC path.
-				realPath = "file://" + realPath.replaceAll("^//", "");
-			}
-		}
-		else {
-			// Posix file system
-			if (path.matches("^/.+") && pathType != UriPathType.Remote ){
-				// Treat paths starting with '/' as absolute file paths, rather than app-relative URLs.
-				realPath = "file://" + realPath;
-			}
-		}
-		URI uri = new URI(realPath);
-
-		String scheme = uri.getScheme();
-    	String host = uri.getHost();
-		boolean isLocal = ("file".equalsIgnoreCase(scheme) || host == null || host.isEmpty());
-		switch(pathType){
-		case Remote:
-			if (isLocal){
-				throw new SecurityException("Invalid URI path '" + path.toString() + "'. Only absolute URLs are permitted.");
-			}
-			break;
-		case Local:
-			if (!isLocal){
-				throw new SecurityException("Invalid URI path '" + path.toString() + "'. Only local file paths are permitted.");
-			}
-			break;
-		default:
-			// Don't care whether the path is local or remote.
-		}
-		return uri;
+	
+	/**
+	 * Generate an HTML document that displays information about an exception.
+	 * @param e	The exception to be displayed. 
+	 * @return	An HTML-formatted string containing information about e.
+	 */
+	public String getErrorHtml(Exception e) {
+		String title = this.userAgent + " Error";
+		return 
+			"<html>" +
+				"<head><title>" + title + "</title></head>" +
+				"<body>" +
+					"<h2>" +
+					title +
+					"</h2>" +
+					"<p><strong>Reason: </strong>" +
+					e.getMessage().replaceAll("\\n", "<br/>") +
+					"</p>" +
+				"</body>" +
+			"</html>";
 	}
-    
-    public static Map<URL, URI> parseUriMap(String mapText, UriPathType pathType) throws MalformedURLException, URISyntaxException, SecurityException {
-    	Map<URL, URI> map = null;
-    	if (mapText != null && !mapText.isEmpty()){
-    		map = new HashMap<URL, URI>();
-    		String[] mapEntries = mapText.split("\\||\\n");
-    		for(String mapEntry : mapEntries){
-    			String[] entryParts = mapEntry.split("=", 2);
-    			map.put(new URL(entryParts[0]), getURI(entryParts[1], pathType));
-    		}
-    	}
-    	return map;
-    }
 }

@@ -19,9 +19,7 @@ package it.essepuntato.lode;
 import java.io.File;
 import java.io.PrintWriter;
 import java.net.URI;
-import java.net.URL;
 import java.nio.file.Files;
-import java.util.Map;
 
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
@@ -68,18 +66,30 @@ public class LodeApp {
 				 									.hasArg()
 				 									.isRequired(false)
 				 									.create("source");
-		
+				
 		Option languageOption = OptionBuilder.withArgName("languageCode")
 											 .withDescription("Optional: The specified language will be used as preferred language instead of English when showing annotations of the ontology specified in ontology-url. E.g.: \"lang=it\", \"lang=fr\", etc.")
 											 .hasArg()
 											 .isRequired(false)
 											 .create("lang");
 		
-		Option lodeBaseOption = OptionBuilder.withArgName("lodeBase")
-				 .withDescription("Optional: The base URL to which the ontology URL should be appended for any 'Visualise with Lode' links.")
+		Option cssBaseOption = OptionBuilder.withArgName("cssBase")
+				 .withDescription("Optional: the base URL *relative to where the HTML description will be saved* where stylesheets needed by the description should live. Defaults to 'lode'.")
 				 .hasArg()
 				 .isRequired(false)
-				 .create("lodeBase");
+				 .create("cssBase");
+
+		Option sourceBaseOption = OptionBuilder.withArgName("sourceBase")
+				 .withDescription("Optional: The base URL to which an ontology URL should be appended in order to reference the ontology definition source.")
+				 .hasArg()
+				 .isRequired(false)
+				 .create("sourceBase");
+
+		Option visBaseOption = OptionBuilder.withArgName("visBase")
+				 .withDescription("Optional: The base URL to which an imported ontology URL should be appended for any 'Visualise it with Lode' links.")
+				 .hasArg()
+				 .isRequired(false)
+				 .create("visBase");
 		
         options.addOption(ontologyHtmlPathOption);
         options.addOption(ontologyUrlOption);
@@ -89,84 +99,84 @@ public class LodeApp {
         options.addOption("imported", false, "Optional: When specified, the axioms contained the ontologies directed imported into ontology-url are added to the HTML description of the ontology. If both parameters closure and imported are specified (in any order), just imported will be considered.");
         options.addOption("reasoner", false, "Optional: When specified, the assertions inferable from ontology-url using the Pellet reasoner will be added to the HTML description of the ontology. Note that, depending upon the nature of your ontology, this computationally intensive function can be very time-consuming.");
         options.addOption(ontologySourceOption);
+        options.addOption("saveSource", false, "Optional: Whether a local RDF/XML copy of the ontology source should be saved in the same location as the HTML description. Ignored if an ontologySource value is provided.");
         options.addOption(languageOption);
-        options.addOption(lodeBaseOption);
+        options.addOption(cssBaseOption);
+        options.addOption(sourceBaseOption);
+        options.addOption(visBaseOption);
 
 		try {
 			// Parse the command line.
 	        CommandLineParser parser = new BasicParser();
 	        CommandLine cmd = parser.parse(options, args);
-	        
-	        // Retrieve and validate the destination path for the Ontology Description HTML file.
-	        String ontologyHtmlPath = cmd.getOptionValue(ontologyHtmlPathOption.getOpt());
-	        URI ontologyHtmlUri = LodeApi.getURI(ontologyHtmlPath, LodeApi.UriPathType.Local);
-	        File ontologyHtmlFile = new File(ontologyHtmlUri);
-	        if (ontologyHtmlFile.exists() && !ontologyHtmlFile.canWrite()){
-	        	throw new IllegalArgumentException("Invalid ontologyHtmlPath value '" + ontologyHtmlUri.toString() + "'. A file already exists at that location that may not be overwritten.");	        	
-	        }
-	        
-	        // Retrieve and validate the source path for the Ontology Definition Document.
-	        String ontologyUrl = cmd.getOptionValue(ontologyUrlOption.getOpt());
-	        String ontologyPath = cmd.getOptionValue("path", null);
-	        URI ontologyDocumentUri = (ontologyPath != null && !ontologyPath.isEmpty()) ?
-	        							LodeApi.getURI(ontologyPath, LodeApi.UriPathType.Local) :
-	        							LodeApi.getURI(ontologyUrl, LodeApi.UriPathType.Remote);
-	        	        	        
-			// Locate the directory that this .jar file is deployed to.
+
+			// Initialize  LODE Server instance.
 			URI executionUri = LodeApp.class.getProtectionDomain().getCodeSource().getLocation().toURI();
 			File executionFile = new File(executionUri);
-			String contentDirPath = null;
+			String resourcePath = null;
 			if (executionFile.isDirectory() && "classes".equals(executionFile.getName())){
 				// Assume we are working from the source code structure in development
 				// (The maven build output, which is at /target/classes)
 				String baseDirPath = executionFile.getParentFile().getParent();
-				contentDirPath = baseDirPath + File.separator + "src" + File.separator + "main" + File.separator + "webapp";
+				resourcePath = baseDirPath + File.separator + "src" + File.separator + "main" + File.separator + "webapp";
 			}
 			else {
 				// ExecutionFile should be the .jar file, which should be directly in the contentDir.
-				contentDirPath = executionFile.getParent();
+				resourcePath = executionFile.getParent();
 			}
-			String serverFilesPath = contentDirPath + File.separator + "server";
-			String clientFilesPath = contentDirPath + File.separator + "client";
+
+			String cssBase = cmd.getOptionValue("cssBase", "lode");
+			String visBase = cmd.getOptionValue("visBase", null);
+			LodeApi lode = new LodeApi(resourcePath, true, "LODE Command Line", cssBase, null, visBase);
+			
+	        // Retrieve and validate Ontology Description HTML save-location parameter.
+	        String ontologyHtmlPath = cmd.getOptionValue(ontologyHtmlPathOption.getOpt());
+	        URI ontologyHtmlUri = UriHelper.validateURI(ontologyHtmlPath, UriHelper.UriPathType.Filesystem, false, "Invalid HTML Path option");
+	        File ontologyHtmlFile = new File(ontologyHtmlUri);
+	        if (ontologyHtmlFile.exists() && !ontologyHtmlFile.canWrite()){
+	        	throw new IllegalArgumentException("Invalid HTML Path Option '" + ontologyHtmlUri.toString() + "'. A file already exists at that location that may not be overwritten.");	        	
+	        }
 	        
-	        // Parse the specified ontology document.  Imports may be mapped to *either* local or remote files.
-	        System.out.print("Parsing ontology definition document '" + ontologyDocumentUri.getPath() + "'... ");
-	        String ontologyImports = cmd.getOptionValue("ontologyImports", null);
-	        Map<URL, URI> ontologyImportsMap = LodeApi.parseUriMap(ontologyImports, LodeApi.UriPathType.Any);
-	        
+	        // Parse the Ontology Definition.
+	        String ontologyUrl = cmd.getOptionValue(ontologyUrlOption.getOpt());
+	        String ontologyPath = cmd.getOptionValue("path", null);
+	        String imports = cmd.getOptionValue("ontologyImports", null);
 	        boolean closure = cmd.hasOption("closure");
 	        boolean imported = cmd.hasOption("imported");
 	        boolean reasoner = cmd.hasOption("reasoner");
 	        
-	        URI pelletPropertiesUri = reasoner ? LodeApi.getURI(serverFilesPath + File.separator + "pellet.properties", LodeApi.UriPathType.Local) : null;
-	        
-	        String ontologyContent = LodeApi.parseWithOWLAPI(ontologyDocumentUri, ontologyImportsMap, imported, closure, pelletPropertiesUri);
+	        String ontologyDefinitionPath = (ontologyPath != null && !ontologyPath.isEmpty()) ? ontologyPath : ontologyUrl;
+	        System.out.print("Parsing ontology definition document '" + ontologyDefinitionPath + "'... ");
+	        String ontologyContent = lode.parseOntology(ontologyDefinitionPath, imports, imported, closure, reasoner);
 	        System.out.print("Parsed OK. \n\n");
 	        
-        	// Derive the URL and location of the source file from the HTML url and path.
+        	// Work out what the source URL that will appear in the ontology description should be.
         	String ontologySourceUrl = cmd.getOptionValue(ontologySourceOption.getOpt(), null);
         	if (ontologySourceUrl != null && !ontologySourceUrl.isEmpty()){
-        		// A specific value for the source parameter was provided. 
+        		// A specific value for the source URL was provided. Use it.
         		System.out.println("Using provided source URL '" + ontologySourceUrl + "'.\n");       		
         	}
-        	else {
-        		// We will attempt to verify that the ontology source file lives in the same location
-        		// that the ontology description file will be saved to, which allows it to be
-        		// referenced from the HTML file via a relative path.
+        	else if (cmd.hasOption("saveSource")){
+        		// Assume the definition source should exist as an RDF file in the same location
+        		// as the ontology description, so we can use a relative URL to reference it.
         		ontologySourceUrl = ontologyHtmlFile.getName().replaceAll("\\.\\w+$", "") + ".rdf";
-        		String ontologySourcePath = ontologyHtmlFile.getParent() + File.separator + ontologySourceUrl;
-        		        		
+        		
+        		// Do our best to ensure that the source file really does exist.
+        		String ontologySourcePath = ontologyHtmlFile.getParent() + File.separator + ontologySourceUrl;      		
         		if (ontologySourcePath.equals(ontologyPath)){
+        			// The calculated source location matches the definition we parsed.
         			System.out.println("Using '" + ontologySourceUrl + "' to reference the original, local ontology document at '" + ontologyPath + "'.\n");
         		}
         		else {
+        			// We read the definition from elsewhere, and will need to save a copy
+        			// to the location we are going to reference it from.
         			File ontologySourceFile = new File(ontologySourcePath);
         			if (ontologySourceFile.exists()){
         				System.out.println("WARNING: Unable to save and reference local ontology source, because the file '" + ontologySourcePath + "' already exists, but was not specified as the ontology path.\n");
         				ontologySourceUrl = null;
         			}
         			else {
-        				System.out.print("\tSaving parsed ontology source to '" + ontologySourcePath + "'... ");
+        				System.out.print("\tSaving RDF/XML ontology source to '" + ontologySourcePath + "'... ");
         				try (PrintWriter out = new PrintWriter(ontologySourceFile)){
         					out.write(ontologyContent);
         				}
@@ -178,12 +188,8 @@ public class LodeApp {
 				
 	        // Transform the ontology Document to HTML, and save it to the specified location.
 	        System.out.print("Transforming ontology definition to HTML... ");
-	        String cssLocation = "lode/";
-	        String xsltPath = serverFilesPath + File.separator + "extraction.xsl";
 	        String lang = cmd.getOptionValue("lang", null);
-	        String lodeBase = cmd.getOptionValue("lodeBase", "http://www.essepuntato.it/lode/owlapi/");
-
-	        String ontologyHtml = LodeApi.transformOntology(ontologyContent, ontologyUrl, ontologySourceUrl, cssLocation, lang, xsltPath, lodeBase);
+	        String ontologyHtml = lode.transformOntology(ontologyContent, ontologyUrl, ontologySourceUrl, lang);
 	        System.out.print("Transformation succeeded.\n\n");
 	        		
 	        // Save the resulting document to the requested file.
@@ -196,12 +202,12 @@ public class LodeApp {
 	        // Ensure the CSS and other resource files that the HTML file will need are also saved
 	        // into the location relative to the HTML file that was just saved.
 	        System.out.println("Ensuring css and image resource files exist:");
-	        String clientFilesDestinationPath = ontologyHtmlFile.getParent() + File.separator + "lode";
+	        String clientFilesDestinationPath = ontologyHtmlFile.getParent() + File.separator + cssBase;
 	        File clientFilesDestination = new File(clientFilesDestinationPath);
 	        clientFilesDestination.mkdirs();
 	        
-	        File clientFilesSource = new File(clientFilesPath);
-	        File[] clientFiles = clientFilesSource.listFiles();
+	        File clientFilesDir = new File(resourcePath + "/client");
+	        File[] clientFiles = clientFilesDir.listFiles();
 	        for (File sourceFile: clientFiles){
 	        	String sourceFileName = sourceFile.getName();
 	        	String destFileName = clientFilesDestinationPath + File.separator + sourceFileName;

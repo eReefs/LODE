@@ -17,7 +17,6 @@ package it.essepuntato.lode;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.URL;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -29,6 +28,7 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class GetSource extends HttpServlet {
 	private static final long serialVersionUID = 1L;
+	private LodeApi lode;
        
     /**
      * @see HttpServlet#HttpServlet()
@@ -37,45 +37,38 @@ public class GetSource extends HttpServlet {
         super();
         // TODO Auto-generated constructor stub
     }
-
+    
+	/**
+	 * @see HttpServlet#init()
+	 */
+    public void init() throws ServletException {
+		try {
+			this.lode = new LodeApi(super.getServletContext(), "LODE Source Servlet");
+		}
+		catch (Exception ex){
+			super.log("INIT Error in LODE Source Servlet instance", ex);
+			throw new ServletException(ex);
+		}
+    }
+    
 	/**
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		
-		SourceExtractor extractor = new SourceExtractor();
-		extractor.addMimeTypes(MimeType.mimeTypes);
-		response.setCharacterEncoding("UTF-8");
-		
+		String result = "";
 		try {
-			String stringURL = request.getParameter("url");
-			String content = "";
-			
-			URL ontologyURL = new URL(stringURL);
-			content = extractor.exec(ontologyURL);
-			
+			String url = request.getParameter("url");
+			result = this.lode.getOntologySource(url);
 			response.setContentType("text/plain");
-			PrintWriter out = response.getWriter();
-			out.println(content);
-		} catch (Exception e) {
+		} 
+		catch (Exception ex) {
+			super.log("GET Error in LODE Source Servlet instance", ex);
+			result = this.lode.getErrorHtml(ex);
 			response.setContentType("text/html");
-			PrintWriter out = response.getWriter();
-			out.println(getErrorPage(e));
 		}
-	}
-
-	private String getErrorPage(Exception e) {
-		return 
-			"<html>" +
-				"<head><title>LODE error</title></head>" +
-				"<body>" +
-					"<h2>" +
-					"LODE: get source error" +
-					"</h2>" +
-					"<p><strong>Reason: </strong>" +
-					e.getMessage() +
-					"</p>" +
-				"</body>" +
-			"</html>";
+		response.setCharacterEncoding("UTF-8");
+		try (PrintWriter out = response.getWriter()){
+			out.println(result);
+		}
 	}
 }

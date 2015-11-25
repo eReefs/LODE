@@ -15,12 +15,34 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 package it.essepuntato.lode;
 
-public interface MimeType {
-	public static String[] mimeTypes = {
-		"application/rdf+xml" ,
-		"text/turtle" , 
-		"application/x-turtle",
-		"text/xml" ,
-		"text/plain", 
-		"*/*"};
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
+
+/**
+ * LODE Exception Class
+ * Used for exceptions thrown by the LODE Server.
+ */
+@SuppressWarnings("serial")
+public class LodeException extends Exception {
+
+	LodeException(String message){
+		super(message);
+	}
+
+	LodeException(String message, Throwable cause){
+		super(message, cause);
+	}
+	
+	LodeException(Throwable cause){
+		super(cause);
+	}
+	
+	public String getDetailedMessage(){
+		StringWriter writer = new StringWriter();
+		PrintWriter printWriter = new PrintWriter(writer);
+		super.printStackTrace(printWriter);
+		printWriter.flush();
+		return writer.toString();
+	}
 }
