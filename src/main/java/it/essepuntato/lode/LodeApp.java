@@ -127,7 +127,7 @@ public class LodeApp {
 
 			String cssBase = cmd.getOptionValue("cssBase", "lode");
 			String visBase = cmd.getOptionValue("visBase", null);
-			LodeApi lode = new LodeApi(resourcePath, true, "LODE Command Line", cssBase, null, visBase);
+			LodeApi lode = new LodeApi(resourcePath, true, 50, "LODE Command Line", cssBase, null, visBase);
 			
 	        // Retrieve and validate Ontology Description HTML save-location parameter.
 	        String ontologyHtmlPath = cmd.getOptionValue(ontologyHtmlPathOption.getOpt());

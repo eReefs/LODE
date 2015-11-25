@@ -12,6 +12,12 @@
 		<welcome-file>default.htm</welcome-file>
 		<welcome-file>default.jsp</welcome-file>
 	</welcome-file-list>
+    </context-param>
+	<context-param>
+      <param-name>maxRedirects</param-name>
+      <param-value>50</param-value>
+      <description>The maximum number of redirects that should be followed when fetching the contents of an ontology definition.</description>
+    </context-param>
     <context-param>
       <param-name>sourceBase</param-name>
       <param-value></param-value>

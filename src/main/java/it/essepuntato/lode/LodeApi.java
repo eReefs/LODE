@@ -90,14 +90,13 @@ public class LodeApi {
 	public final String xsltPath;
 	public final URI pelletPropertiesUri;
 	public final UriHelper.UriPathType definitionPathType;
+	public final int maxRedirects;
 	public final String userAgent;
 	public final String cssBase;
 	public final String sourceBase;
 	public final String visBase;
 
 	/* Useful constants */
-	public final int maxRedirects = 50;
-
 	public final String[] mimeTypes = {
 		"application/rdf+xml" ,
 		"text/turtle" , 
@@ -114,8 +113,9 @@ public class LodeApi {
 	
     /**
      * Initialising constructor for the {@link LodeApi} type.
-     * @param serverDirPath			The local filesystem location that contains the stylesheets and translation dictionaries.
+     * @param resourcePath			The local filesystem location that contains the directories of server and client files.
      * @param allowLocalDefinitions	Whether this LODE instance is permitted to read ontology definitions from the local filesystem.
+     * @param maxRedirects			The maximum number of redirects to follow when downloading ontology definitions before assuming an error.
      * @param userAgent				The user agent string that should identify this application when downloading ontology definitions. 
      * @param cssBase				The base URL from which ontology descriptions should reference client-side resources like stylesheets.
      * 								Use null if client files have the same web-path as generated ontology descriptions.
@@ -128,6 +128,7 @@ public class LodeApi {
     public LodeApi(
     		String resourcePath, 
     		boolean allowLocalDefinitions,
+    		int maxRedirects,
     		String userAgent,
     		String cssBase,
     		String sourceBase,
@@ -148,6 +149,7 @@ public class LodeApi {
      		this.xsltPath = UriHelper.validatePath(resourcePath +  "/server/extraction.xsl", UriHelper.UriPathType.Filesystem, false, "Invalid XSLT path");
         	this.pelletPropertiesUri = UriHelper.validateURI(resourcePath + "/server/pellet.properties",  UriHelper.UriPathType.Filesystem, false, "Invalid pellet.properties path");
         	this.definitionPathType = allowLocalDefinitions ? UriHelper.UriPathType.Any : UriHelper.UriPathType.WebAbsolute;
+        	this.maxRedirects = maxRedirects;
         	this.userAgent = userAgent;
     		this.cssBase = UriHelper.validatePath(cssBase.replaceAll("([^\\/])$", "$1/"), UriHelper.UriPathType.WebAny, false, "Invalid CSS base URL");
  
@@ -174,6 +176,7 @@ public class LodeApi {
     public LodeApi(ServletContext context, String userAgent) throws NumberFormatException, LodeException{
 		this( context.getRealPath("."), 
 			false, 
+			Integer.parseInt(context.getInitParameter("maxRedirects")), 
 			userAgent,
 			"client/",
 			context.getInitParameter("sourceBase").isEmpty() ? "source?url=" : context.getInitParameter("sourceBase"),
