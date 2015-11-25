@@ -13,6 +13,11 @@
 		<welcome-file>default.jsp</welcome-file>
 	</welcome-file-list>
 	<context-param>
+		<param-name>cssExtra</param-name>
+		<param-value></param-value>
+		<description>URL for an additional CSS file to be included in the HTML ontology descriptions.</description>
+	</context-param>
+	<context-param>
 		<param-name>maxRedirects</param-name>
 		<param-value>50</param-value>
 		<description>The maximum number of redirects that should be followed when fetching the contents of an ontology definition.</description>

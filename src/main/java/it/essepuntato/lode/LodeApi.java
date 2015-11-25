@@ -98,6 +98,7 @@ public class LodeApi {
 	public final int maxRedirects;
 	public final String userAgent;
 	public final String cssBase;
+	public final String cssExtra;
 	public final String sourceBase;
 	public final String visBase;
 	public final String lodeHome;
@@ -125,6 +126,8 @@ public class LodeApi {
      * @param userAgent				The user agent string that should identify this application when downloading ontology definitions. 
      * @param cssBase				The base URL from which ontology descriptions should reference client-side resources like stylesheets.
      * 								Use null if client files have the same web-path as generated ontology descriptions.
+     * @param cssExtra				The URL of an additional (non-LODE) stylesheet that ontology descriptions should reference. 
+     * 								Use null to not reference any additional stylesheet.
      * @param sourceBase			The base URL to which an ontology-definition URL can be appended in order to reference the plain-text
      * 								source of the definition. Use null to skip generating source links in ontology descriptions this way.
      * @param visBase				The base URL to which an ontology-definition URL can be appended in order to reference a LODE-generated 
@@ -138,6 +141,7 @@ public class LodeApi {
     		int maxRedirects,
     		String userAgent,
     		String cssBase,
+    		String cssExtra,
     		String sourceBase,
     		String visBase,
     		String lodeHome
@@ -166,6 +170,7 @@ public class LodeApi {
         	this.maxRedirects = maxRedirects;
         	this.userAgent = userAgent;
     		this.cssBase = UriHelper.validatePath(cssBase.replaceAll("([^\\/])$", "$1/"), UriHelper.UriPathType.WebAny, false, "Invalid CSS base URL");
+    		this.cssExtra = UriHelper.validatePath(cssExtra, UriHelper.UriPathType.WebAny, true, "Invalid extra CSS URL");
  
     		String useSourceBase = UriHelper.validatePath(sourceBase, UriHelper.UriPathType.WebAny, true, "Invalid Source link base URL");
     		this.sourceBase = useSourceBase.isEmpty() ? this.defaultSourceBase : useSourceBase;
@@ -196,6 +201,7 @@ public class LodeApi {
 			Integer.parseInt(context.getInitParameter("maxRedirects")), 
 			userAgent,
 			"client/",
+			context.getInitParameter("cssExtra"),
 			context.getInitParameter("sourceBase").isEmpty() ? "source?url=" : context.getInitParameter("sourceBase"),
 			context.getInitParameter("visBase").isEmpty() ? "extract?owlapi=true&url=" : context.getInitParameter("visBase"),					
 			context.getInitParameter("lodeHome").isEmpty() ? "index.jsp" : context.getInitParameter("lodeHome")
@@ -425,6 +431,7 @@ public class LodeApi {
 			TransformerFactory tfactory = new net.sf.saxon.TransformerFactoryImpl();
 			Transformer transformer = tfactory.newTransformer(xsltSource);
 			transformer.setParameter("css-location", this.cssBase);
+			transformer.setParameter("css-extra", this.cssExtra);
 			transformer.setParameter("lang", useLang);
 			transformer.setParameter("lode-home", this.lodeHome);
 			transformer.setParameter("ontology-url", ontologyUrl);

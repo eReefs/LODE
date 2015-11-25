@@ -36,6 +36,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
     <xsl:output encoding="UTF-8" indent="no" method="xhtml" />
     
     <xsl:param name="css-location" select="'./'" as="xs:string" />
+    <xsl:param name="css-extra" select="''" as="xs:string" />
     <xsl:param name="lang" select="'en'" as="xs:string" />
     <xsl:param name="lode-home" select="''" as="xs:string" />
     <xsl:param name="ontology-url" select="''" as="xs:string" />
@@ -112,6 +113,9 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
         <link href="{$css-location}Primer.css" rel="stylesheet" type="text/css" />
         <link href="{$css-location}rec.css" rel="stylesheet" type="text/css" />
         <link href="{$css-location}extra.css" rel="stylesheet" type="text/css" />
+        <xsl:if test="string-length($css-extra) != 0">
+        	<link href="{$css-extra}" rel="stylesheet" type="text/css" />        
+        </xsl:if>
         <link rel="shortcut icon" href="{$css-location}favicon.ico" />
         <script src="{$css-location}jquery.js"><!-- Comment for compatibility --></script>
         <script src="{$css-location}jquery.scrollTo.js"><!-- Comment for compatibility --></script>

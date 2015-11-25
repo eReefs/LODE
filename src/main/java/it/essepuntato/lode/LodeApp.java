@@ -79,6 +79,12 @@ public class LodeApp {
 				 .isRequired(false)
 				 .create("cssBase");
 
+		Option cssExtraOption = OptionBuilder.withArgName("cssExtra")
+				 .withDescription("Optional: URL for an additional CSS file to be included in the HTML ontology description.")
+				 .hasArg()
+				 .isRequired(false)
+				 .create("cssExtra");
+
 		Option sourceBaseOption = OptionBuilder.withArgName("sourceBase")
 				 .withDescription("Optional: The base URL to which an ontology URL should be appended in order to reference the ontology definition source.")
 				 .hasArg()
@@ -108,6 +114,7 @@ public class LodeApp {
         options.addOption("saveSource", false, "Optional: Whether a local RDF/XML copy of the ontology source should be saved in the same location as the HTML description. Ignored if an ontologySource value is provided.");
         options.addOption(languageOption);
         options.addOption(cssBaseOption);
+        options.addOption(cssExtraOption);
         options.addOption(sourceBaseOption);
         options.addOption(visBaseOption);
         options.addOption(lodeHomeOption);
@@ -133,9 +140,10 @@ public class LodeApp {
 			}
 
 			String cssBase = cmd.getOptionValue("cssBase", "lode");
+			String cssExtra = cmd.getOptionValue("cssExtra", null);
 			String visBase = cmd.getOptionValue("visBase", null);
 			String lodeHome = cmd.getOptionValue("lodeHome", null);
-			LodeApi lode = new LodeApi(resourcePath, true, 50, "LODE Command Line", cssBase, null, visBase, lodeHome);
+			LodeApi lode = new LodeApi(resourcePath, true, 50, "LODE Command Line", cssBase, cssExtra, null, visBase, lodeHome);
 			
 	        // Retrieve and validate Ontology Description HTML save-location parameter.
 	        String ontologyHtmlPath = cmd.getOptionValue(ontologyHtmlPathOption.getOpt());
