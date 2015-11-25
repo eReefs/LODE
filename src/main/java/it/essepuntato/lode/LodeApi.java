@@ -83,8 +83,13 @@ import com.clarkparsia.pellet.owlapiv3.PelletReasonerFactory;
  */
 public class LodeApi {
 	/* Properties to be read from the local manifest. */
+	public final String vendorName;
+	public final String vendorUrl;
+	public final String appVersion; 
+	public final String buildDate;
 	public final String defaultSourceBase;
 	public final String defaultVisBase;
+	public final String defaultLodeHome;
 	
 	/* Properties that depend on LODE deployment */
 	public final String xsltPath;
@@ -141,8 +146,14 @@ public class LodeApi {
      		try (InputStream manifestStream = manifestUri.toURL().openStream() ){
         		Properties prop = new java.util.Properties();
         		prop.load(manifestStream);
+        		this.vendorName = prop.getProperty("Specification-Vendor");
+        		this.vendorUrl = prop.getProperty("Specification-Vendor-Url");
+        		String impVersion = prop.getProperty("Implementation-Version");
+        		this.appVersion =  (impVersion == null || impVersion.isEmpty()) ? prop.getProperty("Specification-Version") : impVersion;
+        		this.buildDate = prop.getProperty("Build-Date");
         		this.defaultSourceBase = prop.getProperty("Source-Base");
         		this.defaultVisBase = prop.getProperty("Vis-Base");
+        		this.defaultLodeHome = prop.getProperty("Specification-Url");
     		}
     		
      		// Validate and cache deployment-specific properties.
