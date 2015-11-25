@@ -100,6 +100,7 @@ public class LodeApi {
 	public final String cssBase;
 	public final String sourceBase;
 	public final String visBase;
+	public final String lodeHome;
 
 	/* Useful constants */
 	public final String[] mimeTypes = {
@@ -128,6 +129,7 @@ public class LodeApi {
      * 								source of the definition. Use null to skip generating source links in ontology descriptions this way.
      * @param visBase				The base URL to which an ontology-definition URL can be appended in order to reference a LODE-generated 
      * 								description of that ontology. Use null to skip generating 'Visualise it with LODE' links in ontology descriptions.
+     * @param lodeHome				The URL of the LODE web application, used in the footer link of Ontology Descriptions.
      * @throws LodeException		If any of the parameters are invalid.
      */
     public LodeApi(
@@ -137,7 +139,8 @@ public class LodeApi {
     		String userAgent,
     		String cssBase,
     		String sourceBase,
-    		String visBase
+    		String visBase,
+    		String lodeHome
     	) throws LodeException {
     	
     	try {   		
@@ -168,7 +171,10 @@ public class LodeApi {
     		this.sourceBase = useSourceBase.isEmpty() ? this.defaultSourceBase : useSourceBase;
 
     		String useVisBase = UriHelper.validatePath(visBase, UriHelper.UriPathType.WebAny, true, "Invalid Visualise link base URL");
-    		this.visBase = useVisBase.isEmpty() ? this.defaultVisBase : useVisBase;     	
+    		this.visBase = useVisBase.isEmpty() ? this.defaultVisBase : useVisBase;
+     	
+    		String useLodeHome = UriHelper.validatePath(lodeHome, UriHelper.UriPathType.WebAny, true, "Invalid LODE Homepage URL");
+    		this.lodeHome = useLodeHome.isEmpty() ? this.defaultLodeHome : useLodeHome;
     	}
     	catch(Exception ex){
     		throw new LodeException(ex);
@@ -191,7 +197,8 @@ public class LodeApi {
 			userAgent,
 			"client/",
 			context.getInitParameter("sourceBase").isEmpty() ? "source?url=" : context.getInitParameter("sourceBase"),
-			context.getInitParameter("visBase").isEmpty() ? "extract?owlapi=true&url=" : context.getInitParameter("visBase")					
+			context.getInitParameter("visBase").isEmpty() ? "extract?owlapi=true&url=" : context.getInitParameter("visBase"),					
+			context.getInitParameter("lodeHome").isEmpty() ? "index.jsp" : context.getInitParameter("lodeHome")
 		);
     }
     
@@ -419,9 +426,12 @@ public class LodeApi {
 			Transformer transformer = tfactory.newTransformer(xsltSource);
 			transformer.setParameter("css-location", this.cssBase);
 			transformer.setParameter("lang", useLang);
-			transformer.setParameter("lode-base", this.visBase);
+			transformer.setParameter("lode-home", this.lodeHome);
 			transformer.setParameter("ontology-url", ontologyUrl);
 			transformer.setParameter("source", useSource);
+			transformer.setParameter("vendor-name", this.vendorName);
+			transformer.setParameter("vendor-url", this.vendorUrl);
+			transformer.setParameter("vis-base", this.visBase);
 			
 			// Use the XSLT to transform the Ontology Definition.
 			String result = null;

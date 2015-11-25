@@ -90,6 +90,12 @@ public class LodeApp {
 				 .hasArg()
 				 .isRequired(false)
 				 .create("visBase");
+
+		Option lodeHomeOption = OptionBuilder.withArgName("lodeHome")
+				 .withDescription("Optional: The LODE Homepage URL which should be shown in the footer of generated Ontology Descriptions.")
+				 .hasArg()
+				 .isRequired(false)
+				 .create("lodeHome");
 		
         options.addOption(ontologyHtmlPathOption);
         options.addOption(ontologyUrlOption);
@@ -104,6 +110,7 @@ public class LodeApp {
         options.addOption(cssBaseOption);
         options.addOption(sourceBaseOption);
         options.addOption(visBaseOption);
+        options.addOption(lodeHomeOption);
 
 		try {
 			// Parse the command line.
@@ -127,7 +134,8 @@ public class LodeApp {
 
 			String cssBase = cmd.getOptionValue("cssBase", "lode");
 			String visBase = cmd.getOptionValue("visBase", null);
-			LodeApi lode = new LodeApi(resourcePath, true, 50, "LODE Command Line", cssBase, null, visBase);
+			String lodeHome = cmd.getOptionValue("lodeHome", null);
+			LodeApi lode = new LodeApi(resourcePath, true, 50, "LODE Command Line", cssBase, null, visBase, lodeHome);
 			
 	        // Retrieve and validate Ontology Description HTML save-location parameter.
 	        String ontologyHtmlPath = cmd.getOptionValue(ontologyHtmlPathOption.getOpt());
