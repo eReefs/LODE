@@ -68,12 +68,21 @@ public class LodeServlet extends HttpServlet {
 			String lang = request.getParameter("lang");
 
 	    	String module = request.getParameter("module");
+			boolean owlapi = "false".equalsIgnoreCase(request.getParameter("owlapi")) ? false : true;
 			boolean imported = ("imported".equalsIgnoreCase(module)) ? true : new Boolean(request.getParameter("imported"));
 			boolean closure = ("closure".equalsIgnoreCase(module)) ? true : new Boolean(request.getParameter("closure"));
 			boolean reasoner = "reasoner".equals(request.getParameter("reasoner")) ? true : new Boolean(request.getParameter("reasoner"));
 						
 	    	// Parse the ontology document using the requested modules.
-			String ontologyContent = this.lode.parseOntology(ontologyUrl, imports, imported, closure, reasoner);
+			String ontologyContent = null;
+			if (owlapi || imported || closure || reasoner){
+				// We should parse the ontology document before transforming it.
+				ontologyContent = this.lode.parseOntology(ontologyUrl, imports, imported, closure, reasoner);
+			}
+			else {
+				// The caller has explicity asked for the source not to be parsed/validated. 
+				ontologyContent = this.lode.getOntologySource(ontologyUrl);
+			}
 	            			
 			// Transform the ontology document into HTML.
 			result = this.lode.transformOntology(ontologyContent, ontologyUrl, null, lang);

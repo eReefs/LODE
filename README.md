@@ -2,10 +2,10 @@
 
 The LODE application was created by [Silvio Peroni](http://www.essepuntato.it/) and the canonical version of the source code is hosted at [https://github.com/essepuntato/LODE](https://github.com/essepuntato/LODE).
 
-It is a Java Application that can be compiled either as a Web Application (for deployment into a servlet container) or as a .jar file (for use on the command line). It uses [Maven](https://maven.apache.org/) to specify non-local dependencies, and has an ANT build script to package the build results into each of the two deployment configurations. This script ses the [Maven Ant Tasks](http://maven.apache.org/ant-tasks/index.html) library to make all the maven dependencies available to ANT.
+It is a Java Application that can be compiled either as a Web Application (for deployment into a servlet container) or as a .jar file (for use on the command line). It uses [Maven](https://maven.apache.org/) to specify non-local dependencies, and has an ANT build script to package the build results into each of the two deployment configurations. This script uses the [Maven Ant Tasks](http://maven.apache.org/ant-tasks/index.html) library to make all the maven dependencies available to ANT.
 
 Both modes allow a caller to request a HTML-formatted description of a formal ontology definition, where the definition is given in a parsable 
-[OWL](http://www.w3.org/2001/sw/wiki/OWL) format (RDF, Turtle etc).
+[OWL](http://www.w3.org/2001/sw/wiki/OWL) format (RDF, Turtle etc). Depending on the parameters specified, the HTML pages created by LODE takes into account both ontological axioms and annotations. The CSSs used for the resulting HTML page are based on the W3C CSSs for Recommendation documents. 
 
 ## Development Environment
 
@@ -40,9 +40,10 @@ This servlet accepts the following request/querystring parameters:
 |---------------------|------|---------|
 | **url**=*[url-encoded-iri]* | **Required.** The absolute HTTP IRI/URL of the OWL ontology that will be processed by the service. This is referred to as *ontology-url* in this documentation. |
 | **imports**=[**iri_1**=*url_1*\|...\|**iri_n**=*url_n*] | Mappings between the canonical IRI for an ontology dependency and the *absolute* URL from which that ontology definition should *actually* be read |
-| **closure**=*[true\|false]* | When set to **true**, the transitive closure given by considering the imported ontologies of *ontology-url* is added to the HTML description of the ontology. The default is **false**. |
-| **imported**=*[true\|false]* | When set to **true**, the axioms contained in the imported ontologies of *ontology-url* are added to the HTML description of the ontology. If both *closure* and *imported* are specified (in any order), only *imported* will be considered. The default is **false** |
-| **reasoner**=*[true\|false]* | When set to **true**, the assertions inferrable from *ontology-url* using the [Pellet reasoner](http://clarkparsia.com/pellet) will be added to the HTML description of the ontology. Note that, depending upon the nature of your ontology, this computationally intensive function can be very time-consuming. The default is **false** |
+| **owlapi**=*[true\|false]* | When set to **true**, the *ontology-url* will be pre-processed via [OWLAPI](http://owlapi.sourceforge.net/), in order to linearized it in standard RDF/XML format. If you know your ontology definition is *already* valid RDF/XML, you can set this to *false* to skip the validation step. The default is **true**  |
+| **closure**=*[true\|false]* | When set to **true**, the transitive closure given by considering the imported ontologies of *ontology-url* is added to the HTML description of the ontology. This parameter implicitly specifies the *owlapi* parameter. The default is **false**.  |
+| **imported**=*[true\|false]* | When set to **true**, the axioms contained in the imported ontologies of *ontology-url* are added to the HTML description of the ontology. This parameter implicitly specifies the *owlapi* parameter. If both *closure* and *imported* are specified (in any order), only *imported* will be considered. The default is **false** |
+| **reasoner**=*[true\|false]* | When set to **true**, the assertions inferrable from *ontology-url* using the [Pellet reasoner](http://clarkparsia.com/pellet) will be added to the HTML description of the ontology. Note that, depending upon the nature of your ontology, this computationally intensive function can be very time-consuming. This parameter implicitly specifies the *owlapi* parameter. The default is **false** |
 | **lang**=*[en\|fr\|it]* | The language-code for the language to use for headings and other common content in the ontology-description HTML. *ontology-url*. Currently supported codes are **en** (English), **fr** (French) and **it** (Italian). The default is **en**. |
     
 
@@ -112,21 +113,21 @@ The command line application accepts the following arguments:
 
 | Command Line Argument | Meaning |
 |---------------------|------|---------|
-| **-url**=*[ontology-IRI]* |  **Required.** The HTTP IRI for the OWL ontology that you want to process. This is referred to as *ontology-url* in this documentation. |
-| **-html**=*[/path/to/save/ontology.htm]* | **Required.** Absolute path to the local filesystem location where the HTML description of the ontology definition should be saved. |
-| **-path**=*[/path/to/read/ontolog.ttl]* | Optional filesystem path from which the ontology definition should actually be read. If this argument is not provided, then the ontology definition will be downloaded from from the *ontology-url*. |
-| **-imports**=[**iri_1**=*/path/to/ref_1*\|...\|**iri_n**=*/path/to/ref_n*] | Mappings between the canonical IRI for an ontology dependency and the URI from which that definition should actually be read. URIs may be alternate absolute URLs, *or* local filesystem paths (if dependencies are not yet published) |
+| **-url**=_[ontology-IRI]_ |  **Required.** The HTTP IRI for the OWL ontology that you want to process. This is referred to as *ontology-url* in this documentation. |
+| **-html**=_[/path/to/save/ontology.htm]_ | **Required.** Absolute path to the local filesystem location where the HTML description of the ontology definition should be saved. |
+| **-path**=_[/path/to/read/ontology.ttl]_ | Optional filesystem path from which the ontology definition should actually be read. If this argument is not provided, then the ontology definition will be downloaded from from the _ontology-url_. |
+| **-imports**=[**iri1**=_/path/to/ref1_\|...\|**iriN**=_/path/to/refN_] | Mappings between the canonical IRI for an ontology dependency and the URI from which that definition should actually be read. URIs may be alternate absolute URLs, *or* local filesystem paths (if dependencies are not yet published) |
 | **-closure** | When this argument is present, the transitive closure given by considering the imported ontologies of *ontology-url* is added to the HTML description of the ontology. |
 | **-imported** | When this argument is present, the axioms contained in the imported ontologies of *ontology-url* are added to the HTML description of the ontology. If both *-closure* and *-imported* are specified (in any order), only *-imported* will be considered. |
 | **-reasoner** | When this argument is present, the assertions inferrable from *ontology-url* using the [Pellet reasoner](http://clarkparsia.com/pellet) will be added to the HTML description of the ontology. This can be slow. |
-| **-lang**=*[en\|fr\|it]* | The language-code for the language to use for headings and other common content in the ontology-description HTML. *ontology-url*. Currently supported codes are **en** (English), **fr** (French) and **it** (Italian). The default is **en**. |
-| **-cssBase**=*[./rel/path/to/css]* | The *relative* path from the value of *html* to where the stylesheets and javascript files needed bythe HTML ontology description should be placed. If this argument is not present, an default path of ```./lode/``` will be used.
-| **-cssExtra**=*[http://example.com/my-style.css]* | URL for an additional stylesheet that HTML ontology descriptions should reference. |
+| **-lang**=_[en\|fr\|it]_ | The language-code for the language to use for headings and other common content in the ontology-description HTML. _ontology-url_. Currently supported codes are **en** (English), **fr** (French) and **it** (Italian). The default is **en**. |
+| **-cssBase**=_[./rel/path/to/css]_ | The *relative* path from the value of *html* to where the stylesheets and javascript files needed bythe HTML ontology description should be placed. If this argument is not present, an default path of ```./lode/``` will be used.
+| **-cssExtra**=_[http://example.com/my-style.css]_ | URL for an additional stylesheet that HTML ontology descriptions should reference. |
 | **-source**=*[http://example.com/ontology.rdf]* | The absolute or relative link to reference for the **show source** link in the ontology description. | 
 | **-saveSource** | When this argument is present, an RDF/XML version of the ontology definition will be saved to the same directory given for *html*, and referenced by the **show source** link in the generated HTML description. Ignored if the *source* argument is also provided. |
-| **-sourceBase**=*[http://example.com/lode/source?url=]* | The base URL to which the *ontology-ul* can be appended in order to construct the **show source** link in the generated HTML description. Ignored if either the *source* or the *saveSource* arguments are provided. Defaults to the *source* servlet used by the canonical LODE server: ```http://eelst.cs.unibo.it/apps/LODE/source?url=``` |
-| **-visBase**=*[http://example.com/lode/extract?url=]* | The base URL to which the the IRI of an imported ontology can appended when constructing 'Visualise it with Lode' links. Defaults to the canonical LODE service: ```http://www.essepuntato.it/lode/owlapi/``` |
-| **-lodeHome**=*[http://example.com/lode/]* |The URL for the LODE homepage, to be used to link back to the LODE documentation from HTML ontology descriptions. Defaults to the canonical LODE homepage: ```http://www.essepuntato.it/lode/``` |
+| **-sourceBase**=_[http://example.com/lode/source?url=]_ | The base URL to which the *ontology-ul* can be appended in order to construct the **show source** link in the generated HTML description. Ignored if either the *source* or the *saveSource* arguments are provided. Defaults to the *source* servlet used by the canonical LODE server: ```http://eelst.cs.unibo.it/apps/LODE/source?url=``` |
+| **-visBase**=_[http://example.com/lode/extract?url=]_ | The base URL to which the the IRI of an imported ontology can appended when constructing 'Visualise it with Lode' links. Defaults to the canonical LODE service: ```http://www.essepuntato.it/lode/owlapi/``` |
+| **-lodeHome**=_[http://example.com/lode/]_ |The URL for the LODE homepage, to be used to link back to the LODE documentation from HTML ontology descriptions. Defaults to the canonical LODE homepage: ```http://www.essepuntato.it/lode/``` |
 
 
 Command line calls will look like:
