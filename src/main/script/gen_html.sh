@@ -12,6 +12,7 @@ SOURCE_PATHS=
 OUTPUT_DIR=
 URL_BASE="http://purl.org"
 URL_PATH_CHAR=
+VIS_BASE=
 
 #..............................................................................
 # Check that the command-line jar lives in the same directory as this script.
@@ -26,10 +27,10 @@ fi
 #..............................................................................
 # Parse command line arguments for any overrides.
 #..............................................................................
-while getopts "h?f:e:d:o:u:c:" opt; do
+while getopts "h?f:e:d:o:u:c:v:" opt; do
 	case $opt in
 	h|\?)
-		echo "usage: ${SCRIPT} [ -f <rdf_or_ttl_file>  | -d <rdf_or_ttl_dir> ] [ -e <rdf_or_ttl_extension> ] [ -o <output_dir> ] [ -u <url_base> ] [-c <url_path_char> ]"
+		echo "usage: ${SCRIPT} [ -f <rdf_or_ttl_file>  | -d <rdf_or_ttl_dir> ] [ -e <rdf_or_ttl_extension> ] [ -o <output_dir> ] [ -u <url_base> ] [-c <url_path_char> ] [ -v <vis_base>]"
 		exit 0
 		;;
 	f)
@@ -50,6 +51,9 @@ while getopts "h?f:e:d:o:u:c:" opt; do
 	c)
 		URL_PATH_CHAR=$OPTARG
 		;;
+    v)
+        VIS_BASE=$OPTARG
+        ;;
 	?)
 		echo "Invalid option: $OPTARG" 
 		exit 1
@@ -99,8 +103,15 @@ do
 		output="${OUTPUT_DIR}/${output_file}"
 		source="${url}.rdf"
 	fi
+    
+    cmd="java -jar $LODE_JAR -url '${url}' -path '${path}' -source '${source}' -html '${output}'"
+    if [ -n "${VIS_BASE}" ]; then
+      cmd="${cmd} -visBase='${VIS_BASE}'"
+    fi
 	echo "Creating the HTML for '${url}' from '${path}'"
-    java -jar $LODE_JAR -url "${url}" -path "${path}" -source "${source}" -html "${output}"
+    echo "${CMD}"
+    ${CMD}
+    
 done
 
 # Reset the default loop delimiter.
