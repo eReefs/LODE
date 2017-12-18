@@ -52,7 +52,7 @@ while getopts "h?f:e:d:o:u:c:l:" opt; do
 		URL_PATH_CHAR=$OPTARG
 		;;
     l)
-        LODE_URL=$OPTARG
+        LODE_HOME=$OPTARG
         ;;
 	?)
 		echo "Invalid option: $OPTARG" 
