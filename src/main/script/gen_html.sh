@@ -106,7 +106,7 @@ do
     
     cmd="java -jar $LODE_JAR -url '${url}' -path '${path}' -source '${source}' -html '${output}'"
     if [ -n "${LODE_HOME}" ]; then
-      cmd="${cmd} -sourceBase '${LODE_HOME}source?url=' -visBase '${LODE_HOME}owlapi/' -lodeHome '${LODE_HOME}'"
+      cmd="${cmd} -visBase '${LODE_HOME}owlapi/' -lodeHome '${LODE_HOME}'"
     fi
 	echo "Creating the HTML for '${url}' from '${path}'"
     echo "${cmd}"
