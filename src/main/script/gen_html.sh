@@ -12,7 +12,7 @@ SOURCE_PATHS=
 OUTPUT_DIR=
 URL_BASE="http://purl.org"
 URL_PATH_CHAR=
-VIS_BASE=
+LODE_HOME="http://www.essepuntato.it/lode/"
 
 #..............................................................................
 # Check that the command-line jar lives in the same directory as this script.
@@ -27,7 +27,7 @@ fi
 #..............................................................................
 # Parse command line arguments for any overrides.
 #..............................................................................
-while getopts "h?f:e:d:o:u:c:v:" opt; do
+while getopts "h?f:e:d:o:u:c:l:" opt; do
 	case $opt in
 	h|\?)
 		echo "usage: ${SCRIPT} [ -f <rdf_or_ttl_file>  | -d <rdf_or_ttl_dir> ] [ -e <rdf_or_ttl_extension> ] [ -o <output_dir> ] [ -u <url_base> ] [-c <url_path_char> ] [ -v <vis_base>]"
@@ -51,8 +51,8 @@ while getopts "h?f:e:d:o:u:c:v:" opt; do
 	c)
 		URL_PATH_CHAR=$OPTARG
 		;;
-    v)
-        VIS_BASE=$OPTARG
+    l)
+        LODE_URL=$OPTARG
         ;;
 	?)
 		echo "Invalid option: $OPTARG" 
@@ -105,8 +105,8 @@ do
 	fi
     
     cmd="java -jar $LODE_JAR -url '${url}' -path '${path}' -source '${source}' -html '${output}'"
-    if [ -n "${VIS_BASE}" ]; then
-      cmd="${cmd} -visBase='${VIS_BASE}'"
+    if [ -n "${LODE_HOME}" ]; then
+      cmd="${cmd} -sourceBase '${LODE_HOME}source?url=' -visBase '${LODE_HOME}owlapi/' -lodeHome '${LODE_HOME}"
     fi
 	echo "Creating the HTML for '${url}' from '${path}'"
     echo "${CMD}"
