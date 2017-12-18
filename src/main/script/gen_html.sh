@@ -109,8 +109,8 @@ do
       cmd="${cmd} -sourceBase '${LODE_HOME}source?url=' -visBase '${LODE_HOME}owlapi/' -lodeHome '${LODE_HOME}"
     fi
 	echo "Creating the HTML for '${url}' from '${path}'"
-    echo "${CMD}"
-    ${CMD}
+    echo "${cmd}"
+    ${cmd}
     
 done
 
