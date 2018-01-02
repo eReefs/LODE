@@ -143,7 +143,6 @@
       <fileset dir="${env.WEBAPP_DIR}">
       </fileset>
     </copy>
-  	<copy todir="${env.WAR_DIR}/META-INF" file="${env.BUILD_DIR}/MANIFEST.MF"/>
     <copy todir="${env.WAR_DIR}/WEB-INF/classes">
       <fileset dir="${env.BUILD_DIR}/classes"/>
     </copy>
@@ -151,7 +150,7 @@
       <fileset refid="runtime.fileset"/>
   	</copy>
     <mkdir dir="${env.OUT_DIR}" />
-    <war basedir="${env.WAR_DIR}" destfile="${env.OUT_DIR}/${env.OUT_FILE}.war" webxml="${env.WAR_DIR}/WEB-INF/web.xml">
+    <war basedir="${env.WAR_DIR}" destfile="${env.OUT_DIR}/${env.OUT_FILE}.war" manifest="${env.BUILD_DIR}/MANIFEST.MF" webxml="${env.WAR_DIR}/WEB-INF/web.xml">
       <webinf dir="${env.WAR_DIR}/WEB-INF/">
         <include name="**/*.jar" />
       </webinf>
