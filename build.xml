@@ -3,45 +3,154 @@
   <property environment="env"/>
   <property name="env.SERVLET_DIR" value="/usr/share/tomcat7/lib"/>
   <property name="env.SERVLET_JAR" value="servlet-api.jar"/>
-  <property name="env.APP_VERSION" value="2.0.0.SNAPSHOT"/>
-  <property name="env.WARFILE" value="out/LODE-${env.APP_VERSION}.war"/>
+  <property name="env.SPECIFICATION_VERSION" value="1.2"/>
+  <property name="env.SPECIFICATION_VENDOR" value="Silvio Peroni, U.Bologna, http://www.essepuntato.it/lode"/>
+  <property name="env.IMPLEMENTATION_VERSION" value="2.0.0.SNAPSHOT"/>
+  <property name="env.IMPLEMENTATION_VENDOR" value="UNKNOWN"/>
+  <property name="env.SRC_DIR" value="src/main/java"/>
+  <property name="env.WEBAPP_DIR" value="src/main/webapp"/>
+  <property name="env.BUILD_DIR" value="build"/>
+  <property name="env.WAR_DIR" value="${env.BUILD_DIR}/war"/>
+  <property name="env.JAR_DIR" value="${env.BUILD_DIR}/jar"/>
+  <property name="env.OUT_DIR" value="out"/>
+  <property name="env.OUT_FILE" value="LODE-${env.IMPLEMENTATION_VERSION}"/>
+  <property name="env.TEST_URL" value="http://www.essepuntato.it/2008/12/earmark"/>
+  <property name="env.TEST_SOURCE" value="earmark.rdf"/>
+  <property name="env.TEST_DIR" value="test"/>
+  <property name="env.TEST_PATH" value="${env.TEST_DIR}/${env.TEST_SOURCE}"/>
+  <property name="env.TEST_HTML" value="${env.TEST_DIR}/earmark.htm"/>
+  <property name="absoluteTestPath" location="${env.TEST_PATH}"/>
+  <property name="absoluteTestHtml" location="${env.TEST_HTML}"/>
 
-  <target name="clean">
-    <delete dir="content/WEB-INF/classes" />
+  <target name="mvn-init" unless="compile.classpath" xmlns:artifact="urn:maven-artifact-ant">
+    <typedef resource="org/apache/maven/artifact/ant/antlib.xml" uri="urn:maven-artifact-ant" classpath="lib/maven-ant-tasks.jar"/> 
+    <condition property="maven.repo.local" value="${maven.repo.local}" else="${user.home}/.m2/repository">
+      <isset property="maven.repo.local"/>
+    </condition>           
+    <echo>maven.repo.local=${maven.repo.local}</echo>
+    <artifact:localRepository id="local.repository" path="${maven.repo.local}"/> 
+    <artifact:pom file="pom.xml" id="maven.project"/>
+    <artifact:dependencies pathId="compile.classpath" filesetId="compile.fileset" useScope="compile">
+      <pom refid="maven.project"/>
+      <localRepository refid="local.repository"/>
+    </artifact:dependencies>
+    <artifact:dependencies pathId="test.classpath" filesetId="test.fileset" useScope="test">
+      <pom refid="maven.project"/>
+      <localRepository refid="local.repository"/>
+    </artifact:dependencies>
+    <artifact:dependencies pathId="runtime.classpath" filesetId="runtime.fileset" useScope="runtime">
+      <pom refid="maven.project"/>
+      <localRepository refid="local.repository"/>
+    </artifact:dependencies>
   </target>
-  <target name="compile" depends="clean">
-    <mkdir dir="content/WEB-INF/classes" />
-    <javac destdir="content/WEB-INF/classes" srcdir="src" includeantruntime="false" debug="true">
-      <classpath>
-        <fileset dir="content/WEB-INF/lib">
-          <include name="*" />
-        </fileset>
-        <fileset dir="${env.SERVLET_DIR}">
-          <include name="${env.SERVLET_JAR}"/>
-        </fileset>
-      </classpath>
+	
+  <target name="clean">
+  	<delete dir="${env.BUILD_DIR}" />
+  	<delete dir="${env.OUT_DIR}" />
+  	<delete dir="${env.TEST_DIR}/lode" />
+  	<delete file="${env.TEST_HTML}" />
+  </target>
+	
+  <target name="compile" depends="mvn-init,clean">
+  	<sleep seconds="2"/> <!-- try to avoid race condition with delete in 'clean' task -->
+    <mkdir dir="${env.BUILD_DIR}" />
+    <mkdir dir="${env.BUILD_DIR}/classes" />
+    <javac destdir="${env.BUILD_DIR}/classes" srcdir="${env.SRC_DIR}" classpathref="compile.classpath" includeantruntime="false" failonerror="true">
+      <compilerarg value="-Xlint:deprecation"/>
     </javac>
-    <copy todir="content/WEB-INF/classes">
-      <fileset dir="src">
-        <include name="**/*.properties" />
-        <include name="**/*.xml" />
+    <copy todir="${env.BUILD_DIR}/classes">
+      <fileset dir="${env.SRC_DIR}">
+        <exclude name="**/*.java" />
       </fileset>
     </copy>
+  </target>
+  <target name="war" depends="compile">
+    <mkdir dir="${env.WAR_DIR}" />
+    <copy todir="${env.WAR_DIR}">
+      <fileset dir="${env.WEBAPP_DIR}">
+      </fileset>
+    </copy>  	
+    <copy todir="${env.WAR_DIR}/WEB-INF/classes">
+      <fileset dir="${env.BUILD_DIR}/classes">
+      </fileset>
+    </copy>
+  	<copy todir="${env.WAR_DIR}/WEB-INF/lib" flatten="true">
+      <fileset refid="runtime.fileset"/>
+  	</copy>
   	<tstamp>
   	  <format property="TODAY" pattern="yyyy-MM-dd HH:mm:ss" />
     </tstamp>
-  	<manifest file="content/META-INF/MANIFEST.MF">
-  	  <attribute name="Application-Version" value="${env.APP_VERSION}"/>
-	  <attribute name="Build-Date" value="${TODAY}"/>                 
+  	<manifest file="${env.WAR_DIR}/META-INF/MANIFEST.MF">
+	  <attribute name="Specification-Title" value="LODE"/>  
+	  <attribute name="Specification-Version" value="${env.SPECIFICATION_VERSION}"/>
+	  <attribute name="Specification-Vendor" value="${env.SPECIFICATION_VENDOR}"/>
+  	  <attribute name="Implementation-Title" value="LODE Servlets"/>  
+  	  <attribute name="Implementation-Version" value="${env.IMPLEMENTATION_VERSION}"/>
+  	  <attribute name="Implementation-Vendor" value="${env.IMPLEMENTATION_VENDOR}"/>
+  	  <attribute name="Build-Date" value="${TODAY}"/>                 
   	</manifest>
-  </target>
-  <target name="war" depends="compile">
-    <war basedir="content" destfile="${env.WARFILE}" webxml="content/WEB-INF/web.xml">
-      <webinf dir="content/WEB-INF/">
+    <mkdir dir="${env.OUT_DIR}" />
+    <war basedir="${env.WAR_DIR}" destfile="${env.OUT_DIR}/${env.OUT_FILE}.war" webxml="${env.WAR_DIR}/WEB-INF/web.xml">
+      <webinf dir="${env.WAR_DIR}/WEB-INF/">
         <include name="**/*.jar" />
       </webinf>
     </war>
   </target>
+  <target name="jar" depends="compile">
+    <mkdir dir="${env.JAR_DIR}" />
+  	<copy todir="${env.JAR_DIR}/server">
+      <fileset dir="${env.WEBAPP_DIR}/server"/>
+  	</copy>
+  	<copy todir="${env.JAR_DIR}/client">
+  	  <fileset dir="${env.WEBAPP_DIR}/client"/>
+  	</copy>
+  	<copy todir="${env.JAR_DIR}/lib" flatten="true">
+      <fileset refid="runtime.fileset"/>
+  	</copy>
+  	<path id="lib.jars">
+  	  <fileset dir="${env.JAR_DIR}">
+  	  	<include name="lib/*.jar"/>
+  	  </fileset>
+	</path>
+  	<manifestclasspath property="lib.jar.list" jarfile="${env.JAR_DIR}/${env.OUT_FILE}.jar">
+  	  <classpath refid="lib.jars" />
+  	</manifestclasspath>
+  	<echo message="Classpath: ${lib.jar.list}"/>
+  	<jar destfile="${env.JAR_DIR}/${env.OUT_FILE}.jar" basedir="${env.BUILD_DIR}/classes">
+  	  <manifest>
+  	    <attribute name="Specification-Title" value="LODE"/>  
+  	    <attribute name="Specification-Version" value="${env.SPECIFICATION_VERSION}"/>
+  	    <attribute name="Specification-Vendor" value="${env.SPECIFICATION_VENDOR}"/>
+    	<attribute name="Implementation-Title" value="LODE Command Line"/>  
+    	<attribute name="Implementation-Version" value="${env.IMPLEMENTATION_VERSION}"/>
+    	<attribute name="Implementation-Vendor" value="${env.IMPLEMENTATION_VENDOR}"/>
+    	<attribute name="Build-Date" value="${TODAY}"/>                 
+  	  	<attribute name="Main-Class" value="au.csiro.lode.LodeApp"/>
+  	  	<attribute name="Class-Path" value="${lib.jar.list}"/>
+  	  </manifest>
+  	</jar>
+  	<tar destfile="${env.OUT_DIR}/${env.OUT_FILE}_cmd-line.tar.gz" basedir="${env.JAR_DIR}" compression="gzip"/>
+  </target>
+  <target name="can_cmd_line">
+  	<available file="${env.JAR_DIR}/${env.OUT_FILE}.jar" property="jar.exists"/>
+  </target>	
+  <target name="do_cmd_line" depends="can_cmd_line" if="jar.exists">
+	<java jar="${env.JAR_DIR}/${env.OUT_FILE}.jar" fork="true" failonerror="true">
+	  <arg value="-url"/>
+	  <arg value="${env.TEST_URL}"/>
+	  <arg value="-source"/>
+	  <arg value="${env.TEST_SOURCE}"/>
+	  <arg value="-path"/>
+	  <arg value="${absoluteTestPath}"/>
+	  <arg value="-html"/>
+	  <arg value="${absoluteTestHtml}"/>
+	  <arg value="-imported"/>
+	  <arg value="-closure"/>
+	  <arg value="-reasoner"/>
+  	</java>
+  </target>	
   <target name="build" depends="compile">
+  </target>	
+  <target name="all" depends="war,jar">
   </target>	
 </project>

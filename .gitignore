@@ -4,6 +4,12 @@
 .settings/
 /bin
 
+# Ant
+/build
+/out
+/test/*.htm
+/test/lode
+
 # Intellij
 .idea/
 *.iml

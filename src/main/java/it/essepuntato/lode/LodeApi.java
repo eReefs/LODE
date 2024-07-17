@@ -16,7 +16,7 @@
 package it.essepuntato.lode;
 
 import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
+import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.HttpURLConnection;
@@ -81,77 +81,21 @@ import com.clarkparsia.pellet.owlapiv3.PelletReasonerFactory;
  * LODE API Class
  */
 public class LodeApi {
-	private String xsltPath = "http://lode.sourceforge.net/xslt";
-	private String cssLocation = "http://eelst.cs.unibo.it/apps/LODE/";
-	private String pelletPropertiesPath = "http://eelst.cs.unibo.it/apps/LODE/pellet.properties";
-	private boolean webOnly = false;
-    
-	public LodeApi(){
-		
-	}
-	
-    public LodeApi(
-    	String xsltPath, 
-    	String cssLocation, 
-    	String pelletPropertiesPath, 
-    	boolean webOnly
-    ) {
-        if (xsltPath != null && !xsltPath.isEmpty()){
-            this.xsltPath = xsltPath;
-        }
-        if (cssLocation != null && !cssLocation.isEmpty()){
-            this.cssLocation = cssLocation;
-            if (!this.cssLocation.endsWith("/")){
-            	this.cssLocation = this.cssLocation + "/";
-            }
-        }
-        if (pelletPropertiesPath != null && !pelletPropertiesPath.isEmpty()){
-            this.pelletPropertiesPath = pelletPropertiesPath;
-        }
-        this.webOnly = webOnly;
+	    
+    public static String parseSimple(URI ontologyUri) throws IOException, URISyntaxException{
+    	SourceExtractor extractor = new SourceExtractor();
+        extractor.addMimeTypes(MimeType.mimeTypes);
+    	String content = extractor.getContent(ontologyUri);
+    	return content;
     }
-    
-    public String parseOntology(
-    	String ontologyUrl,
-    	String ontologyPath,
-    	String ontologyImports,
-    	boolean owlapi, 
-    	boolean imported, 
-    	boolean closure, 
-    	boolean reasoner
-    ) throws Exception {
-    	// Verify that a valid URI for the Ontology Document has been provided.
-    	URI ontologyUri = null;
-    	if (ontologyPath != null && !ontologyPath.isEmpty()){
-    		ontologyUri = PathUtils.getURI(ontologyPath, true);
-    	}
-    	else {
-    		ontologyUri = PathUtils.getURI(ontologyUrl, false);
-    	}    			
-    	if (PathUtils.isLocalFile(ontologyUri) && this.webOnly){
-    		throw new SecurityException("Invalid ontology document path '" + ontologyUri.toString() + "'. Local file paths are not permitted in this context");
-    	}
-    	    	    	
-		String content = "";
-        if (owlapi || imported || closure || reasoner) {
-        	Map<URL, URI> ontologyImportsMap = PathUtils.parseUriMap(ontologyImports);
-        	content = parseWithOWLAPI(ontologyUri, ontologyImportsMap, imported, closure, reasoner);
-        } 
-        else {
-        	SourceExtractor extractor = new SourceExtractor();
-            extractor.addMimeTypes(MimeType.mimeTypes);
-        	content = extractor.getContent(ontologyUri);
-        }
-        return content;
-	}
 
-	private String parseWithOWLAPI(
+	public static String parseWithOWLAPI(
 		URI ontologyUri,
 		Map<URL, URI> ontologyMap,
 		boolean considerImportedOntologies, 
 		boolean considerImportedClosure,
-		boolean useReasoner
-	) throws OWLOntologyCreationException, OWLOntologyStorageException, URISyntaxException, MalformedURLException {
+		URI pelletPropertiesUri 
+	) throws URISyntaxException, OWLOntologyCreationException, OWLOntologyStorageException  {
 				
 		OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
 		if (ontologyMap != null){
@@ -162,9 +106,10 @@ public class LodeApi {
 				
 		IRI ontologyIri = IRI.create(ontologyUri);
 		HttpURLConnection.setFollowRedirects(true);
-		OWLOntology ontology = manager.loadOntology(ontologyIri);
+		OWLOntology ontology = null;
 					
 		if (considerImportedClosure || considerImportedOntologies) {
+			ontology = manager.loadOntology(ontologyIri);
 			Set<OWLOntology> setOfImportedOntologies = new HashSet<OWLOntology>();
 			if (considerImportedOntologies) {
 				setOfImportedOntologies.addAll(ontology.getDirectImports());
@@ -174,9 +119,14 @@ public class LodeApi {
 			for (OWLOntology importedOntology : setOfImportedOntologies) {
 				manager.addAxioms(ontology, importedOntology.getAxioms());
 			}
-		}	
-		if (useReasoner) {
-			ontology = parseWithReasoner(manager, ontology);
+		} 
+		else {
+			manager.setSilentMissingImportsHandling(true);
+			ontology = manager.loadOntology(ontologyIri);
+		}
+		
+		if (pelletPropertiesUri != null) {
+			ontology = parseWithReasoner(pelletPropertiesUri, manager, ontology);
 		}
 			
 		StringDocumentTarget parsedOntology = new StringDocumentTarget();
@@ -186,17 +136,16 @@ public class LodeApi {
 	}
 	
 
-	private OWLOntology parseWithReasoner(
+	public static OWLOntology parseWithReasoner(
+		URI pelletPropertiesUri,
 		OWLOntologyManager manager, 
 		OWLOntology ontology
-	) throws URISyntaxException{
+	) {
 		try {
-			URI pelletPropertiesUri = PathUtils.getURI(this.pelletPropertiesPath, true);
 			PelletOptions.load(pelletPropertiesUri.toURL());
 			PelletReasoner reasoner = PelletReasonerFactory.getInstance().createReasoner(ontology);
 			reasoner.getKB().prepare();
-			List<InferredAxiomGenerator<? extends OWLAxiom>> generators=
-				new ArrayList<InferredAxiomGenerator<? extends OWLAxiom>>();
+			List<InferredAxiomGenerator<? extends OWLAxiom>> generators = new ArrayList<InferredAxiomGenerator<? extends OWLAxiom>>();
 	        generators.add(new InferredSubClassAxiomGenerator());
 	        generators.add(new InferredClassAssertionAxiomGenerator());
 	        generators.add(new InferredDisjointClassesAxiomGenerator());
@@ -264,18 +213,13 @@ public class LodeApi {
 	        }
 	        
 			return inferred;
-		} catch (FileNotFoundException e1) {
-			return ontology;
-		} catch (MalformedURLException e1) {
-			return ontology;
-		} catch (IOException e1) {
-			return ontology;
-		} catch (OWLOntologyCreationException e) {
+		} 
+		catch (IOException | OWLOntologyCreationException e) {
 			return ontology;
 		}
 	}
 
-	private void applyAnnotations(
+	public static void applyAnnotations(
 		OWLEntity aEntity, 
 		Map<OWLEntity, Set<OWLAnnotationAssertionAxiom>> entityAnnotations, 
 		OWLOntologyManager manager, 
@@ -289,12 +233,13 @@ public class LodeApi {
     	}
 	}
 	
-	public String transformOntology(
+	public static String transformOntology(
 		String ontologyContent, 
 		String ontologyUrl, 
 		String ontologySourceUrl, 
 		String cssLocation, 
-		String lang) 
+		String lang,
+		String xsltPath) 
 	throws TransformerException, IOException{
 		
 		// Validate Parameters.
@@ -304,12 +249,12 @@ public class LodeApi {
 		if (ontologyUrl == null || ontologyUrl.isEmpty()){
 			throw new IllegalArgumentException("The ontologyUrl parameter may not be null or empty");
 		}
-		String useSource = (ontologySourceUrl == null || ontologySourceUrl.isEmpty()) ? ontologyUrl + ".rdf" : ontologySourceUrl;
-		String useCss = (cssLocation == null || cssLocation.isEmpty()) ? this.cssLocation : cssLocation;
+		String useSource = (ontologySourceUrl == null || ontologySourceUrl.isEmpty()) ? ontologyUrl : ontologySourceUrl;
+		String useCss = (cssLocation == null || cssLocation.isEmpty()) ? "./" : cssLocation;
 		String useLang = (lang == null || lang.isEmpty()) ? "en" : lang; 
 		
 		// Load and parse the XSLT.
-		StreamSource xsltSource = new StreamSource(this.xsltPath);
+		StreamSource xsltSource = new StreamSource(xsltPath);
 		TransformerFactory tfactory = new net.sf.saxon.TransformerFactoryImpl();
 		Transformer transformer = tfactory.newTransformer(xsltSource);
 		transformer.setParameter("css-location", useCss);
@@ -327,4 +272,46 @@ public class LodeApi {
 		}
 		return result;
 	}
+	
+	public static URI getURI(String path, boolean defaultIsLocal) throws URISyntaxException {
+		String uri = path.replaceAll("\\s", "%20");
+		if (File.separatorChar != '/' ){
+			// Windows.
+			uri = uri.replace(File.separatorChar, '/');
+			if (uri.matches("^[A-Z]:/.+")){
+				// Definitely an absolute local Windows file path.
+				uri = "file:///" + uri;
+			}
+			else if (uri.matches("^//.+")){
+				// Definitely an absolute Windows UNC path.
+				uri = "file://" + uri.replaceAll("^//", "");
+			}
+		}
+		else {
+			// Posix file system
+			if (path.matches("^/.+") && defaultIsLocal){
+				// Treat paths starting with '/' as absolute file paths, rather than app-relative URLs.
+				uri = "file://" + uri;
+			}
+		}
+		return new URI(uri);
+	}
+    public static boolean isLocalFile(URI uri) {
+    	String scheme = uri.getScheme();
+    	String host = uri.getHost();
+    	return "file".equalsIgnoreCase(scheme) && (host == null || host.isEmpty());
+    }
+    
+    public static Map<URL, URI> parseUriMap(String mapText) throws MalformedURLException, URISyntaxException{
+    	Map<URL, URI> map = null;
+    	if (mapText != null && !mapText.isEmpty()){
+    		map = new HashMap<URL, URI>();
+    		String[] mapEntries = mapText.split("\\||\\n");
+    		for(String mapEntry : mapEntries){
+    			String[] entryParts = mapEntry.split("=", 2);
+    			map.put(new URL(entryParts[0]), getURI(entryParts[1], true));
+    		}
+    	}
+    	return map;
+    }
 }
