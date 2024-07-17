@@ -6,7 +6,7 @@
 #..............................................................................
 SCRIPT="$0"
 SCRIPT_HOME=$(dirname "$SCRIPT")
-SOURCE_BASE="${SCRIPT_HOME}/.."
+SOURCE_BASE="${SCRIPT_HOME}"
 SOURCE_EXT=ttl
 SOURCE_PATHS=
 OUTPUT_DIR=
@@ -14,12 +14,12 @@ URL_BASE="http://purl.org"
 URL_PATH_CHAR=
 
 #..............................................................................
-# Check that the command-line jar has been generated.
+# Check that the command-line jar lives in the same directory as this script.
 #..............................................................................
-LODE_JAR=$(ls ${SCRIPT_HOME}/build/LODE-*.jar)
+LODE_JAR=$(ls ${SCRIPT_HOME}/LODE-*.jar)
 if [ ! -f "$LODE_JAR" ]
 then
-	echo "Unable to locate the LODE jarfile under '${SCRIPT_HOME}/build/'. Have you run the 'jar' Ant build task?"
+	echo "Unable to locate the LODE jarfile under '${SCRIPT_HOME}'. Have you run the 'jar' Ant build task?"
 	exit 1
 fi
 
@@ -29,7 +29,7 @@ fi
 while getopts "h?f:e:d:o:u:c:" opt; do
 	case $opt in
 	h|\?)
-		echo "usage: gen_rdf.sh [ -f <rdf_or_ttl_file>  | -d <rdf_or_ttl_dir> ] [ -e <rdf_or_ttl_extension> ] [ -o <output_dir> ] [ -u <url_base> ] [-c <url_path_char> ]"
+		echo "usage: ${SCRIPT} [ -f <rdf_or_ttl_file>  | -d <rdf_or_ttl_dir> ] [ -e <rdf_or_ttl_extension> ] [ -o <output_dir> ] [ -u <url_base> ] [-c <url_path_char> ]"
 		exit 0
 		;;
 	f)
@@ -63,28 +63,46 @@ shift $((OPTIND - 1))
 #..............................................................................
 if [ -z "$SOURCE_PATHS" ]
 then
-	SOURCE_PATHS=$(ls ${SOURCE_BASE}/*.${SOURCE_EXT})
+	SOURCE_PATHS=$(ls "${SOURCE_BASE}"/*.${SOURCE_EXT})
 fi
+
+# Use newlines as the delimiter to identify listed files instead of any whitespace.
+# This ensures the loop works even when there are spaces in filenames.
+OLD_IFS=$IFS
+IFS=$(echo -en "\n\b")
+
 for path in $SOURCE_PATHS
-do 
-	no_ext_path=${path%.rdf}
+do
+    echo "Processing source path '${path}'" 
+	no_ext_path="${path%.rdf}"
 	if [[ "${path}" == "${no_ext_path}" ]] 
 	then
-		no_ext_path=${path%.ttl}
+		no_ext_path="${path%.ttl}"
 	fi
-	output="${no_ext_path}.htm"
-	if [ ! -z "${OUTPUT_DIR}" ]
-	then
-		output_file=$(basename "${output}")
-		output="${OUTPUT_DIR}/${output_file}"
-	fi
+
 	url_path=$(basename "${no_ext_path}")
 	if [ ! -z "$URL_PATH_CHAR" ]
 	then
-		url_path=$(echo $url_path | sed -e "s/${URL_PATH_CHAR}/\//g")
+		url_path=$(echo "${url_path}" | sed -e "s/${URL_PATH_CHAR}/\//g")
 	fi
 	url="${URL_BASE}/${url_path}"
+
+	output="${no_ext_path}.htm"
+	if [ -z "${OUTPUT_DIR}" ]
+	then
+		# saving to the same directory that the definition file lives in.
+		# use a relative source path in the generated html.
+		source="${url_path}.rdf"
+	else
+		# saving to a different directory than the definition file.
+		output_file=$(basename "${output}")
+		output="${OUTPUT_DIR}/${output_file}"
+		source="${url}.rdf"
+	fi
 	echo "Creating the HTML for '${url}' from '${path}'"
-    java -jar $LODE_JAR -url "${url}" -path "${path}" -html "${output}"
+    java -jar $LODE_JAR -url "${url}" -path "${path}" -source "${source}" -html "${output}"
 done
+
+# Reset the default loop delimiter.
+IFS=$OLD_IFS
 
