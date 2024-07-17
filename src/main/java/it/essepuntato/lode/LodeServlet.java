@@ -17,11 +17,8 @@ package it.essepuntato.lode;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.URI;
-import java.net.URL;
-import java.util.Map;
+import java.net.URISyntaxException;
 
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -31,13 +28,28 @@ import javax.servlet.http.HttpServletResponse;
  * Servlet implementation class LodeServlet
  */
 public class LodeServlet extends HttpServlet {
-	private static final long serialVersionUID = 1L;
-       
+	private static final long serialVersionUID = 1L;    
+	private LodeApi lode;
+
     /**
+     * @throws URISyntaxException 
      * @see HttpServlet#HttpServlet()
      */
     public LodeServlet() {
         super();
+    }
+    
+	/**
+	 * @see HttpServlet#init()
+	 */
+    public void init() throws ServletException {
+		try {
+			this.lode = new LodeApi(super.getServletContext(), "LODE Transform Servlet");
+		}
+		catch (Exception ex){
+			super.log("INIT Error in LODE Transform Servlet instance", ex);
+			throw new ServletException(ex);
+		}
     }
 
 	/**
@@ -48,52 +60,36 @@ public class LodeServlet extends HttpServlet {
 			HttpServletResponse response
 	) throws ServletException, IOException {
 		String result = "";
-		try {
-			// Derive context-dependent properties and resource file locations.
-			ServletContext context = getServletContext(); 
-			String servletUrl = request.getRequestURL().toString().replaceAll("/\\w+$", "/");
-			String cssLocation = servletUrl + "client/";
-			String pelletPropertiesPath = context.getRealPath("server/pellet.properties");
-			String xsltPath = context.getRealPath("server/extraction.xsl");
-			boolean webOnly = new Boolean(context.getInitParameter("webOnly"));
-						
-			// Identify the URI for the Ontology definition that should be parsed,
-			// and confirm that it obeys the security restrictions configured for this servlet.
-			String ontologyUrl = request.getParameter("url");
-			String ontologyPath = request.getParameter("path");
-			
-	    	URI ontologyDocumentUri = (ontologyPath != null && !ontologyPath.isEmpty()) ?
-	    								LodeApi.getURI(ontologyPath, true) :
-	    								LodeApi.getURI(ontologyUrl, false); 			
-	    	if (LodeApi.isLocalFile(ontologyDocumentUri) && webOnly){
-	    		throw new SecurityException("Invalid ontology document path '" + ontologyDocumentUri.toString() + "'. Local file paths are not permitted in this context");
-	    	}
-	    	
-	    	// Parse the ontology document using the requested modules.
+		try {								
+			// Retrieve individual request parameters,
+			// which might be submitted individually or via the form on the index page.
+			String ontologyUrl = request.getParameter("url");			    		    		    		    	
+        	String imports = request.getParameter("imports");
+			String lang = request.getParameter("lang");
+
 	    	String module = request.getParameter("module");
-			boolean owlapi = ("owlapi".equalsIgnoreCase(module)) ? true : new Boolean(request.getParameter("owlapi"));
+			boolean owlapi = "false".equalsIgnoreCase(request.getParameter("owlapi")) ? false : true;
 			boolean imported = ("imported".equalsIgnoreCase(module)) ? true : new Boolean(request.getParameter("imported"));
 			boolean closure = ("closure".equalsIgnoreCase(module)) ? true : new Boolean(request.getParameter("closure"));
 			boolean reasoner = "reasoner".equals(request.getParameter("reasoner")) ? true : new Boolean(request.getParameter("reasoner"));
-			
-			String ontologyContent = "";
-	        if (owlapi || imported || closure || reasoner) {
-	        	String ontologyImports = request.getParameter("imports");
-	        	Map<URL, URI> ontologyImportsMap = LodeApi.parseUriMap(ontologyImports);
-	        	URI pelletPropertiesUri = reasoner ? LodeApi.getURI(pelletPropertiesPath, true) : null;
-	        	ontologyContent = LodeApi.parseWithOWLAPI(ontologyDocumentUri, ontologyImportsMap, imported, closure, pelletPropertiesUri);
-	        } 
-	        else {
-	        	ontologyContent = LodeApi.parseSimple(ontologyDocumentUri);
-	        }
-	        			
-			// Transform the ontology.
-			String ontologySourceUrl = servletUrl + "source?url=" + ontologyUrl;	// Calls the 'source' servlet in this webapp for this ontology definition.
-			String lang = request.getParameter("lang");	// null => 'en'.
-			result = LodeApi.transformOntology(ontologyContent, ontologyUrl, ontologySourceUrl, cssLocation, lang, xsltPath);
+						
+	    	// Parse the ontology document using the requested modules.
+			String ontologyContent = null;
+			if (owlapi || imported || closure || reasoner){
+				// We should parse the ontology document before transforming it.
+				ontologyContent = this.lode.parseOntology(ontologyUrl, imports, imported, closure, reasoner);
+			}
+			else {
+				// The caller has explicity asked for the source not to be parsed/validated. 
+				ontologyContent = this.lode.getOntologySource(ontologyUrl);
+			}
+	            			
+			// Transform the ontology document into HTML.
+			result = this.lode.transformOntology(ontologyContent, ontologyUrl, null, lang);
 		}
-		catch (Exception e) {
-			result = getErrorPage(e);
+		catch (Exception ex) {
+			super.log("GET Error in LODE Source Servlet instance", ex);
+			result = this.lode.getErrorHtml(ex);
 		}
 		response.setContentType("text/html");
 		response.setCharacterEncoding("UTF-8");
@@ -101,20 +97,4 @@ public class LodeServlet extends HttpServlet {
 			out.println(result);
 		}
 	}
-		
-	private String getErrorPage(Exception e) {
-		return 
-			"<html>" +
-				"<head><title>LODE error</title></head>" +
-				"<body>" +
-					"<h2>" +
-					"LODE error" +
-					"</h2>" +
-					"<p><strong>Reason: </strong>" +
-					e.getMessage().replaceAll("\\n", "<br/>") +
-					"</p>" +
-				"</body>" +
-			"</html>";
-	}
-
 }

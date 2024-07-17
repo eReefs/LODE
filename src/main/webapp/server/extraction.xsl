@@ -35,11 +35,16 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
     
     <xsl:output encoding="UTF-8" indent="no" method="xhtml" />
     
-    <xsl:param name="lang" select="'en'" as="xs:string" />
     <xsl:param name="css-location" select="'./'" as="xs:string" />
-    <xsl:param name="source" as="xs:string" select="''" />
-    <xsl:param name="ontology-url" as="xs:string" select="''" />
-    
+    <xsl:param name="css-extra" select="''" as="xs:string" />
+    <xsl:param name="lang" select="'en'" as="xs:string" />
+    <xsl:param name="lode-home" select="''" as="xs:string" />
+    <xsl:param name="ontology-url" select="''" as="xs:string" />
+    <xsl:param name="source" select="''" as="xs:string" />
+    <xsl:param name="vendor-name" select="''" as="xs:string" />
+    <xsl:param name="vendor-url" select="''" as="xs:string" />
+    <xsl:param name="vis-base" select="''" as="xs:string" />
+     
     <xsl:variable name="def-lang" select="'en'" as="xs:string" />
     <xsl:variable name="n" select="'\n|\r|\r\n'" />
     <xsl:variable name="rdf" select="/rdf:RDF" as="element()" />
@@ -108,6 +113,9 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
         <link href="{$css-location}Primer.css" rel="stylesheet" type="text/css" />
         <link href="{$css-location}rec.css" rel="stylesheet" type="text/css" />
         <link href="{$css-location}extra.css" rel="stylesheet" type="text/css" />
+        <xsl:if test="string-length($css-extra) != 0">
+        	<link href="{$css-extra}" rel="stylesheet" type="text/css" />        
+        </xsl:if>
         <link rel="shortcut icon" href="{$css-location}favicon.ico" />
         <script src="{$css-location}jquery.js"><!-- Comment for compatibility --></script>
         <script src="{$css-location}jquery.scrollTo.js"><!-- Comment for compatibility --></script>
@@ -176,7 +184,12 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
             <xsl:call-template name="get.swrlrules" />            
             <xsl:call-template name="get.namespacedeclarations" />
             
-            <p class="endnote"><xsl:value-of select="f:getDescriptionLabel('endnote')" /><xsl:text> </xsl:text><a href="http://www.essepuntato.it/lode">LODE</a><xsl:text>, </xsl:text><em>Live OWL Documentation Environment</em><xsl:text>, </xsl:text><xsl:value-of select="f:getDescriptionLabel('developedby')" /><xsl:text> </xsl:text><a href="http://www.essepuntato.it">Silvio Peroni</a>.</p>
+            <p class="endnote">
+            	<xsl:value-of select="f:getDescriptionLabel('endnote')" />
+            	<xsl:text> </xsl:text><a href="{$lode-home}">LODE</a><xsl:text>, </xsl:text><em>Live OWL Documentation Environment</em>
+            	<xsl:text>, </xsl:text><xsl:value-of select="f:getDescriptionLabel('developedby')" /><xsl:text> </xsl:text>
+            	<a href="{$vendor-url}"><xsl:value-of select="$vendor-name" /></a>.
+            </p>
         </body>
     </xsl:template>
     
@@ -265,7 +278,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
                 <xsl:value-of select="@*:resource" />
             </a>
             <xsl:text> (</xsl:text>
-            <a href="http://www.essepuntato.it/lode/owlapi/{@*:resource}"><xsl:value-of select="f:getDescriptionLabel('visualiseitwith')" /> LODE</a>
+            <a href="{$vis-base}{@*:resource}"><xsl:value-of select="f:getDescriptionLabel('visualiseitwith')" /> LODE</a>
             <xsl:text>)</xsl:text>
         </dd>
     </xsl:template>
@@ -304,7 +317,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
                         <xsl:value-of select="@*:resource" />
                     </a>
                     <xsl:text> (</xsl:text>
-                    <a href="http://www.essepuntato.it/lode/owlapi/{@*:resource}"><xsl:value-of select="f:getDescriptionLabel('visualiseitwith')" /> LODE</a>
+                    <a href="{$vis-base}{@*:resource}"><xsl:value-of select="f:getDescriptionLabel('visualiseitwith')" /> LODE</a>
                     <xsl:text>)</xsl:text>
                 </xsl:when>
                 <xsl:otherwise>
