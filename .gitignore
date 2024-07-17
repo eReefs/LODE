@@ -1,7 +1,23 @@
+# Eclipse
+.classpath
+.project
+.settings/
 /bin
-/out
+
+# Ant
 /build
-/content/WEB-INF/classes
-/content/META-INF/MANIFEST.MF
-/test/lode
+/out
 /test/*.htm
+/test/lode
+
+# Intellij
+.idea/
+*.iml
+*.iws
+
+# Mac
+.DS_Store
+
+# Maven
+log/
+target/

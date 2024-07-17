@@ -1,0 +1,15 @@
+Manifest-Version: 1.0
+Ant-Version: Apache Ant 1.9.2
+Created-By: 1.8.0_66-b18 (Oracle Corporation)
+Specification-Title: Live Owl Document Environment Servlets
+Specification-Vendor: Silvio Peroni
+Specification-Vendor-Url: http://www.essepuntato.it
+Specification-Url: http://www.essepuntato.it/lode
+Specification-Version: 1.4
+Implementation-Title: Live Owl Document Environment Servlets
+Implementation-Vendor: UNKNOWN
+Implementation-Vendor-Url: 
+Implementation-Version: 1.4-SNAPSHOT
+Source-Base: http://eelst.cs.unibo.it/apps/LODE/source?url=
+Vis-Base: http://www.essepuntato.it/lode/owlapi/
+
