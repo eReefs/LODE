@@ -1,6 +1,5 @@
 Manifest-Version: 1.0
-Ant-Version: Apache Ant 1.9.2
-Created-By: 1.8.0_66-b18 (Oracle Corporation)
+Class-Path: 
 Specification-Title: Live Owl Document Environment Servlets
 Specification-Vendor: Silvio Peroni
 Specification-Vendor-Url: http://www.essepuntato.it

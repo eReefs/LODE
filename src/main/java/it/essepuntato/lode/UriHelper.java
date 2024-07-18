@@ -1,10 +1,10 @@
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *      
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * Copyright (c) 2010-2013, Silvio Peroni <essepuntato@gmail.com>
- * 
+ *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
  * copyright notice and this permission notice appear in all copies.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
  * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
@@ -30,14 +30,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class UriHelper {
-	
+
 	public enum UriPathType {
 		Any,
 		Filesystem,
 		WebAny,
 		WebAbsolute,
 	}
-	
+
 	public static URI getURI(String path, boolean defaultIsFilesystem) throws URISyntaxException {
 		String realPath = path.replaceAll("\\s", "%20");
 		if (File.separatorChar != '/' ){
@@ -61,7 +61,13 @@ public class UriHelper {
 		}
 		return new URI(realPath);
 	}
-	
+
+	public static boolean isLocalFile(URI uri) {
+    	String scheme = uri.getScheme();
+    	String host = uri.getHost();
+    	return "file".equalsIgnoreCase(scheme) && (host == null || host.isEmpty());
+    }
+
 	public static URI validateURI(String path, UriPathType pathType, boolean allowEmpty, String failMessage) throws IllegalArgumentException {
 		String useMessage = (failMessage == null || failMessage.isEmpty()) ? "Invalid URI path: " : failMessage;
 		if (path == null || path.isEmpty()){
@@ -74,7 +80,7 @@ public class UriHelper {
 		}
 		URI uri = null;
 		try {
-			uri = getURI(path, pathType == UriPathType.Filesystem);		
+			uri = getURI(path, pathType == UriPathType.Filesystem);
 		}
 		catch (URISyntaxException se){
 			throw new IllegalArgumentException(useMessage + ". Not a valid URI.", se);
@@ -82,7 +88,7 @@ public class UriHelper {
 		switch(pathType){
 		case Filesystem:
 			if (! "file".equalsIgnoreCase(uri.getScheme())){
-				throw new IllegalArgumentException(useMessage + " '" + path.toString() + "'. Only local filesystem paths are permitted.");				
+				throw new IllegalArgumentException(useMessage + " '" + path.toString() + "'. Only local filesystem paths are permitted.");
 			}
 			break;
 		case WebAny:
@@ -102,7 +108,7 @@ public class UriHelper {
 		}
 		return uri;
 	}
-	
+
 	public static String validatePath(String path, UriPathType pathType, boolean allowEmpty, String failMessage) throws IllegalArgumentException {
 		URI uri = validateURI(path, pathType, allowEmpty, failMessage);
 		if (uri == null){
@@ -112,7 +118,7 @@ public class UriHelper {
 			return uri.toString();
 		}
 	}
-    
+
     public static Map<URL, URI> parseUriMap(String mapText, UriPathType pathType) throws MalformedURLException, IllegalArgumentException {
     	Map<URL, URI> map = null;
     	if (mapText != null && !mapText.isEmpty()){
@@ -127,7 +133,7 @@ public class UriHelper {
     	}
     	return map;
     }
-		
+
 	public static InputStream getInputStream(URI uri, Iterable<String> mimeTypes, String userAgent, int maxRedirects) throws IOException, URISyntaxException {
 		InputStream sourceStream = null;
 		if ("file".equalsIgnoreCase(uri.getScheme())){
@@ -140,7 +146,7 @@ public class UriHelper {
 			for (String mimeType : mimeTypes) {
 				try {
 					HttpURLConnection connection = null;
-					
+
 					boolean redirect = true;
 					int redirectCount = 0;
 					while (redirect && sourceStream == null) {
@@ -148,15 +154,15 @@ public class UriHelper {
 						connection.setInstanceFollowRedirects(false);
 						connection.setRequestProperty("User-Agent", userAgent);
 						connection.setRequestProperty("Accept", mimeType);
-						
+
 						int status = connection.getResponseCode();
 						if (status == HttpURLConnection.HTTP_OK) {
 							// We have successfully retrieved the document using this MIME type.
 							sourceStream = connection.getInputStream();
 							redirect = false;
 						}
-						else if (status == HttpURLConnection.HTTP_MOVED_TEMP || 
-								 status == HttpURLConnection.HTTP_MOVED_PERM	|| 
+						else if (status == HttpURLConnection.HTTP_MOVED_TEMP ||
+								 status == HttpURLConnection.HTTP_MOVED_PERM	||
 								 status == HttpURLConnection.HTTP_SEE_OTHER) {
 							// We need to follow the redirect to retrieve the document.
 							if (redirectCount >= maxRedirects){
@@ -178,8 +184,8 @@ public class UriHelper {
 					}
 					if (sourceStream != null){
 						// This latest MIME type was correct.
-						break;	// Out of the for-loop 
-					}					
+						break;	// Out of the for-loop
+					}
 				}
 				catch (Exception e) {
 					errorMessage.append("MIME type '" + mimeType + "': # " + e.getMessage() + "\n");
@@ -191,7 +197,7 @@ public class UriHelper {
 		}
 		return sourceStream;
 	}
-	
+
 	public static String getSource(URI uri, Iterable<String> mimeTypes, String userAgent, int maxRedirects) throws IOException, URISyntaxException {
 		StringBuilder content = new StringBuilder();
 		try (InputStream sourceStream = getInputStream(uri, mimeTypes, userAgent, maxRedirects)){

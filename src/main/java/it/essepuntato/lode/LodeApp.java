@@ -1,11 +1,11 @@
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *      
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * Copyright (c) 2015, CSIRO
  * Author: Sharon Tickell <sharon.tickell@csiro.au>
- * 
+ *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
  * copyright notice and this permission notice appear in all copies.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
  * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
@@ -35,14 +35,14 @@ public class LodeApp {
 	public static void main(String[] args) {
 		// Set up the possible command-line arguments.
 		Options options = new Options();
-				
+
 		Option ontologyHtmlPathOption = OptionBuilder.withArgName("ontologyHtmlPath")
 													 .withDescription("Required: Absolute path to the local filesystem location where the HTML description of the ontology definition should be saved.")
 													 .withLongOpt("ontologyHtmlPath")
 													 .hasArg()
 													 .isRequired()
 													 .create("html");
-		
+
 		Option ontologyUrlOption = OptionBuilder.withArgName("ontologyUrl")
 												.withDescription("Required: Absolute URL for the location where the ontology is (or will be) hosted.")
 												.hasArg()
@@ -54,25 +54,25 @@ public class LodeApp {
 												 .hasArg()
 												 .isRequired(false)
 												 .create("path");
-		
+
 		Option ontologyImportsOption = OptionBuilder.withArgName("importUrl_1=importFilePath_1|...|importUrl_n=importFilePath_n")
 													.withDescription("Optional: Mappings between URL and filesystem location for any ontologies imported by the ontology you wish to describe. Needed if those ontologies are not yet accessible at the URL in question. Formatted as url_1=file_1|url_2=file_2|...|url_n=file_n")
 													.hasArg()
 													.isRequired(false)
 													.create("imports");
-		
+
 		Option ontologySourceOption = OptionBuilder.withArgName("ontologySource")
 				 									.withDescription("Optional: Absolute URL for a visualisation of the ontology source. If not provided, then the application will attempt to derive this form the url parameter.")
 				 									.hasArg()
 				 									.isRequired(false)
 				 									.create("source");
-				
+
 		Option languageOption = OptionBuilder.withArgName("languageCode")
 											 .withDescription("Optional: The specified language will be used as preferred language instead of English when showing annotations of the ontology specified in ontology-url. E.g.: \"lang=it\", \"lang=fr\", etc.")
 											 .hasArg()
 											 .isRequired(false)
 											 .create("lang");
-		
+
 		Option cssBaseOption = OptionBuilder.withArgName("cssBase")
 				 .withDescription("Optional: the base URL *relative to where the HTML description will be saved* where stylesheets needed by the description should live. Defaults to 'lode'.")
 				 .hasArg()
@@ -102,11 +102,11 @@ public class LodeApp {
 				 .hasArg()
 				 .isRequired(false)
 				 .create("lodeHome");
-		
+
         options.addOption(ontologyHtmlPathOption);
         options.addOption(ontologyUrlOption);
         options.addOption(ontologyPathOption);
-        options.addOption(ontologyImportsOption);	        
+        options.addOption(ontologyImportsOption);
         options.addOption("closure",  false, "Optional: When specified, the transitive closure given by considering the imported ontologies of ontology-url is added to the HTML description of the ontology. If both functions closure and imported are specified (in any order), just imported will be considered.");
         options.addOption("imported", false, "Optional: When specified, the axioms contained the ontologies directed imported into ontology-url are added to the HTML description of the ontology. If both parameters closure and imported are specified (in any order), just imported will be considered.");
         options.addOption("reasoner", false, "Optional: When specified, the assertions inferable from ontology-url using the Pellet reasoner will be added to the HTML description of the ontology. Note that, depending upon the nature of your ontology, this computationally intensive function can be very time-consuming.");
@@ -144,15 +144,15 @@ public class LodeApp {
 			String visBase = cmd.getOptionValue("visBase", null);
 			String lodeHome = cmd.getOptionValue("lodeHome", null);
 			LodeApi lode = new LodeApi(resourcePath, true, 50, "LODE Command Line", cssBase, cssExtra, null, visBase, lodeHome);
-			
+
 	        // Retrieve and validate Ontology Description HTML save-location parameter.
 	        String ontologyHtmlPath = cmd.getOptionValue(ontologyHtmlPathOption.getOpt());
 	        URI ontologyHtmlUri = UriHelper.validateURI(ontologyHtmlPath, UriHelper.UriPathType.Filesystem, false, "Invalid HTML Path option");
 	        File ontologyHtmlFile = new File(ontologyHtmlUri);
 	        if (ontologyHtmlFile.exists() && !ontologyHtmlFile.canWrite()){
-	        	throw new IllegalArgumentException("Invalid HTML Path Option '" + ontologyHtmlUri.toString() + "'. A file already exists at that location that may not be overwritten.");	        	
+	        	throw new IllegalArgumentException("Invalid HTML Path Option '" + ontologyHtmlUri.toString() + "'. A file already exists at that location that may not be overwritten.");
 	        }
-	        
+
 	        // Parse the Ontology Definition.
 	        String ontologyUrl = cmd.getOptionValue(ontologyUrlOption.getOpt());
 	        String ontologyPath = cmd.getOptionValue("path", null);
@@ -160,25 +160,25 @@ public class LodeApp {
 	        boolean closure = cmd.hasOption("closure");
 	        boolean imported = cmd.hasOption("imported");
 	        boolean reasoner = cmd.hasOption("reasoner");
-	        
+
 	        String ontologyDefinitionPath = (ontologyPath != null && !ontologyPath.isEmpty()) ? ontologyPath : ontologyUrl;
 	        System.out.print("Parsing ontology definition document '" + ontologyDefinitionPath + "'... ");
-	        String ontologyContent = lode.parseOntology(ontologyDefinitionPath, imports, imported, closure, reasoner);
+	        String ontologyContent = lode.parseWithOWLAPI(ontologyDefinitionPath, imports, imported, closure, reasoner);
 	        System.out.print("Parsed OK. \n\n");
-	        
+
         	// Work out what the source URL that will appear in the ontology description should be.
         	String ontologySourceUrl = cmd.getOptionValue(ontologySourceOption.getOpt(), null);
         	if (ontologySourceUrl != null && !ontologySourceUrl.isEmpty()){
         		// A specific value for the source URL was provided. Use it.
-        		System.out.println("Using provided source URL '" + ontologySourceUrl + "'.\n");       		
+        		System.out.println("Using provided source URL '" + ontologySourceUrl + "'.\n");
         	}
         	else if (cmd.hasOption("saveSource")){
         		// Assume the definition source should exist as an RDF file in the same location
         		// as the ontology description, so we can use a relative URL to reference it.
         		ontologySourceUrl = ontologyHtmlFile.getName().replaceAll("\\.\\w+$", "") + ".rdf";
-        		
+
         		// Do our best to ensure that the source file really does exist.
-        		String ontologySourcePath = ontologyHtmlFile.getParent() + File.separator + ontologySourceUrl;      		
+        		String ontologySourcePath = ontologyHtmlFile.getParent() + File.separator + ontologySourceUrl;
         		if (ontologySourcePath.equals(ontologyPath)){
         			// The calculated source location matches the definition we parsed.
         			System.out.println("Using '" + ontologySourceUrl + "' to reference the original, local ontology document at '" + ontologyPath + "'.\n");
@@ -196,32 +196,32 @@ public class LodeApp {
         				try (PrintWriter out = new PrintWriter(ontologySourceFile)){
         					out.write(ontologyContent);
         				}
-        				System.out.print("OK\n"); 
+        				System.out.print("OK\n");
         				System.out.println("Using '" + ontologySourceUrl + "' to reference the archived ontology source at '" + ontologySourcePath + "'.\n");
-        			}	        	
+        			}
         		}
         	}
-				
+
 	        // Transform the ontology Document to HTML, and save it to the specified location.
 	        System.out.print("Transforming ontology definition to HTML... ");
 	        String lang = cmd.getOptionValue("lang", null);
-	        String ontologyHtml = lode.transformOntology(ontologyContent, ontologyUrl, ontologySourceUrl, lang);
+	        String ontologyHtml = lode.applyXSLTTransformation(ontologyContent, ontologyUrl, ontologySourceUrl, lang);
 	        System.out.print("Transformation succeeded.\n\n");
-	        		
+
 	        // Save the resulting document to the requested file.
 	        System.out.print("Saving ontology description to '" + ontologyHtmlUri.getPath() + "'... ");
 	        try (PrintWriter out = new PrintWriter(ontologyHtmlFile)){
 	        	out.write(ontologyHtml);
 	        }
 	        System.out.print("Saved OK.\n\n");
-	        
+
 	        // Ensure the CSS and other resource files that the HTML file will need are also saved
 	        // into the location relative to the HTML file that was just saved.
 	        System.out.println("Ensuring css and image resource files exist:");
 	        String clientFilesDestinationPath = ontologyHtmlFile.getParent() + File.separator + cssBase;
 	        File clientFilesDestination = new File(clientFilesDestinationPath);
 	        clientFilesDestination.mkdirs();
-	        
+
 	        File clientFilesDir = new File(resourcePath + "/client");
 	        File[] clientFiles = clientFilesDir.listFiles();
 	        for (File sourceFile: clientFiles){
@@ -245,7 +245,7 @@ public class LodeApp {
 	        (new HelpFormatter()).printHelp("LodeApp", options, true);
 	    }
 	    catch(Exception ex){
-	        System.err.println("\nUnexpected error: " + ex.getMessage());            
+	        System.err.println("\nUnexpected error: " + ex.getMessage());
 	    }
 	}
 

@@ -1,10 +1,10 @@
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *      
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * Copyright (c) 2010-2013, Silvio Peroni <essepuntato@gmail.com>
- * 
+ *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
  * copyright notice and this permission notice appear in all copies.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
  * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
@@ -28,17 +28,17 @@ import javax.servlet.http.HttpServletResponse;
  * Servlet implementation class LodeServlet
  */
 public class LodeServlet extends HttpServlet {
-	private static final long serialVersionUID = 1L;    
+	private static final long serialVersionUID = 1L;
 	private LodeApi lode;
+	private int maxTentative = 3;
 
-    /**
-     * @throws URISyntaxException 
-     * @see HttpServlet#HttpServlet()
-     */
-    public LodeServlet() {
-        super();
-    }
-    
+	/**
+	 * @see HttpServlet#HttpServlet()
+	 */
+	public LodeServlet() {
+		super();
+	}
+
 	/**
 	 * @see HttpServlet#init()
 	 */
@@ -50,51 +50,61 @@ public class LodeServlet extends HttpServlet {
 			super.log("INIT Error in LODE Transform Servlet instance", ex);
 			throw new ServletException(ex);
 		}
-    }
+	}
 
 	/**
-	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
+	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse
+	 *      response)
 	 */
-	protected void doGet(
-			HttpServletRequest request, 
-			HttpServletResponse response
-	) throws ServletException, IOException {
-		String result = "";
-		try {								
-			// Retrieve individual request parameters,
-			// which might be submitted individually or via the form on the index page.
-			String ontologyUrl = request.getParameter("url");			    		    		    		    	
-        	String imports = request.getParameter("imports");
-			String lang = request.getParameter("lang");
-
-	    	String module = request.getParameter("module");
-			boolean owlapi = "false".equalsIgnoreCase(request.getParameter("owlapi")) ? false : true;
-			boolean imported = ("imported".equalsIgnoreCase(module)) ? true : new Boolean(request.getParameter("imported"));
-			boolean closure = ("closure".equalsIgnoreCase(module)) ? true : new Boolean(request.getParameter("closure"));
-			boolean reasoner = "reasoner".equals(request.getParameter("reasoner")) ? true : new Boolean(request.getParameter("reasoner"));
-						
-	    	// Parse the ontology document using the requested modules.
-			String ontologyContent = null;
-			if (owlapi || imported || closure || reasoner){
-				// We should parse the ontology document before transforming it.
-				ontologyContent = this.lode.parseOntology(ontologyUrl, imports, imported, closure, reasoner);
-			}
-			else {
-				// The caller has explicity asked for the source not to be parsed/validated. 
-				ontologyContent = this.lode.getOntologySource(ontologyUrl);
-			}
-	            			
-			// Transform the ontology document into HTML.
-			result = this.lode.transformOntology(ontologyContent, ontologyUrl, null, lang);
-		}
-		catch (Exception ex) {
-			super.log("GET Error in LODE Source Servlet instance", ex);
-			result = this.lode.getErrorHtml(ex);
-		}
+	protected void doGet(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
 		response.setContentType("text/html");
 		response.setCharacterEncoding("UTF-8");
-		try (PrintWriter out = response.getWriter()){
-			out.println(result);
+		PrintWriter out = response.getWriter();
+
+		for (int i = 0; i < maxTentative; i++) {
+			try {
+				String ontologyUrl = request.getParameter("url");
+				String content = "";
+
+				String imports = request.getParameter("imports");
+				String module = request.getParameter("module");
+				boolean useOWLAPI = new Boolean(request.getParameter("owlapi"));
+				boolean considerImportedOntologies = ("imported".equalsIgnoreCase(module)) ? true : new Boolean(request.getParameter("imported"));
+				boolean considerImportedClosure = ("closure".equalsIgnoreCase(module)) ? true : new Boolean(request.getParameter("closure"));
+				boolean useReasoner = "reasoner".equals(request.getParameter("reasoner")) ? true : new Boolean(request.getParameter("reasoner"));
+
+				if (considerImportedOntologies || considerImportedClosure || useReasoner) {
+					useOWLAPI = true;
+				}
+
+				String lang = request.getParameter("lang");
+				if (lang == null) {
+					lang = "en";
+				}
+
+				if (useOWLAPI) {
+					content = this.lode.parseWithOWLAPI(ontologyUrl, imports, considerImportedOntologies,
+							considerImportedClosure, useReasoner);
+				} else {
+					content = this.lode.getOntologySource(ontologyUrl);
+				}
+
+				content = this.lode.applyXSLTTransformation(content, ontologyUrl, null, lang);
+
+				out.println(content);
+				i = maxTentative;
+			} catch (Exception e) {
+				super.log("GET Error in LODE Source Servlet instance", e);
+				if (i + 1 == maxTentative) {
+					out.println(getErrorPage(e));
+				}
+			}
 		}
+	}
+
+	private String getErrorPage(Exception e) {
+		return "<html>" + "<head><title>LODE error</title></head>" + "<body>" + "<h2>" + "LODE error" + "</h2>"
+				+ "<p><strong>Reason: </strong>" + Encode.forHtml(e.getMessage()) + "</p>" + "</body>" + "</html>";
 	}
 }
