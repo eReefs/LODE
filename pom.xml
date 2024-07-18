@@ -13,10 +13,10 @@
 		<javax.servlet.scope>provided</javax.servlet.scope>
 		<jdk.release.version>11</jdk.release.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<apachecommons.version>2.1.1</apachecommons.version>
-		<apachecommonsbeanutils.version>1.9.3</apachecommonsbeanutils.version>
-		<log4j.version>1.7.7</log4j.version>
-		<sl4j.version>1.7.7</sl4j.version>
+		<apachecommons.version>2.11.0</apachecommons.version>
+		<apachecommonsbeanutils.version>1.9.4</apachecommonsbeanutils.version>
+		<log4j.version>2.23.1</log4j.version>
+		<slf4j.version>2.0.13</slf4j.version>
 		<owaspencoder.version>1.2.3</owaspencoder.version>
 	</properties>
 
@@ -33,14 +33,14 @@
 		<dependency>
 			<groupId>net.sf.saxon</groupId>
 			<artifactId>Saxon-HE</artifactId>
-			<version>9.5.1-6</version>
+			<version>12.5</version>
 		</dependency>
 
 		<!-- jgrapht (jdk 1.5) -->
 		<dependency>
 			<groupId>org.jgrapht</groupId>
-			<artifactId>jgrapht-jdk1.5</artifactId>
-			<version>0.7.3</version>
+			<artifactId>jgrapht-core</artifactId>
+			<version>1.5.2</version>
 		</dependency>
 
 		<!-- pellet -->
@@ -54,7 +54,7 @@
 		<dependency>
 			<groupId>net.sourceforge.owlapi</groupId>
 			<artifactId>owlapi-distribution</artifactId>
-			<version>4.0.2</version>
+			<version>5.5.0</version>
 		</dependency>
 
 		<!-- servlets -->
@@ -79,15 +79,17 @@
 
 		<!-- Logging LOG4J - SLF4J -->
 		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-log4j12</artifactId>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-slf4j2-impl</artifactId>
 			<version>${log4j.version}</version>
 		</dependency>
+		<!--
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-jdk14</artifactId>
-			<version>${sl4j.version}</version>
+			<version>${slf4j.version}</version>
 		</dependency>
+		-->
 
 		<!-- OWASP Java Encoder -->
 		<dependency>
