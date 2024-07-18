@@ -13,5 +13,6 @@
 .DS_Store
 
 # Maven
+.m2
 log/
 target/

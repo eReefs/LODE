@@ -1,16 +1,27 @@
 ---
-version: '2'
+x-lode-config: &lode-config
+  LODE_EXTERNAL_URL: http://localhost:8080/lode
+  WEBVOWL_EXTERNAL_URL: http://visualdataweb.de/webvowl/#iri=
+  USE_HTTPS: "false"
 
 services:
-
-  lode:
+  jetty:
     build:
-      context: ./
-      dockerfile: Dockerfile
       args:
-         LODE_EXTERNAL_URL: http://localhost:8080/lode
-         WEBVOWL_EXTERNAL_URL: http://visualdataweb.de/webvowl/#iri=
-         useHTTPs: false
-    container_name: lode
+        <<: [ *lode-config ]
+      context: .
+      target: jetty
     ports:
-      - 8080:8080/tcp
+      - 8080:8080
+    volumes:
+      - ./.m2/:/root/.m2/
+      - ./src/:/opt/src/
+
+  tomcat:
+    build:
+      context: .
+      target: tomcat
+    environment:
+      <<: [ *lode-config ]
+    ports:
+      - 8080:8080
