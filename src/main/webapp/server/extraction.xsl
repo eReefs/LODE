@@ -43,6 +43,7 @@
 	<xsl:param name="vendor-url" select="''" as="xs:string" />
 	<xsl:param name="vis-base" as="xs:string"
 		select="''" />
+	<xsl:param name="webvowl" as="xs:string" select="''" />
 
 	<xsl:variable name="def-lang" select="'en'" as="xs:string" />
 	<xsl:variable name="n" select="'\n|\r|\r\n'" />
@@ -199,6 +200,16 @@
 				<xsl:call-template name="get.author" />
 				<xsl:call-template name="get.publisher" />
 				<xsl:call-template name="get.imports" />
+				<xsl:call-template name="get.extractedFrom" />
+				<xsl:call-template name="get.coversrequirements" />
+				<xsl:call-template name="get.hasComponent" />
+				<xsl:call-template name="get.hasConsequences" />
+				<xsl:call-template name="get.hasIntent" />
+				<xsl:call-template name="get.hasUnitTest" />
+				<xsl:call-template name="get.isSpecializationOf" />
+				<xsl:call-template name="get.reengineeredFrom" />
+				<xsl:call-template name="get.relatedCPs" />
+				<xsl:call-template name="get.scenarios" />
 				<dl>
 					<dt>
 						<xsl:value-of
@@ -210,6 +221,8 @@
 							<xsl:value-of
 								select="f:getDescriptionLabel('ontologysource')" />
 						</a>
+						-
+						<a href="{$webvowl}{$ontology-url}">WebVowl</a>
 					</dd>
 				</dl>
 				<xsl:apply-templates
@@ -363,6 +376,64 @@
 			<xsl:text>)</xsl:text>
 		</dd>
 	</xsl:template>
+
+	<!-- ######################################################################################################### -->
+	<!-- Templates for annotations defined in http://www.ontologydesignpatterns.org/schemas/cpannotationschema.owl -->
+	<!-- ######################################################################################################### -->
+
+	<xsl:template
+		match="cpannotationschema:extractedFrom|cpannotationschema:hasComponent|cpannotationschema:isSpecializationOf|cpannotationschema:relatedCPs">
+		<dd>
+			<a href="{@*:resource}">
+				<xsl:value-of select="@*:resource" />
+			</a>
+			<xsl:text> (</xsl:text>
+			<a href="{$lode-external-url}/extract?url={@*:resource}">
+				<xsl:value-of
+					select="f:getDescriptionLabel('visualiseitwith')" />
+				LODE
+			</a>
+			<xsl:text>)</xsl:text>
+		</dd>
+	</xsl:template>
+
+	<xsl:template
+		match="cpannotationschema:coversRequirements|cpannotationschema:hasConsequences|cpannotationschema:hasIntent|cpannotationschema:hasUnitTest|cpannotationschema:scenarios">
+		<dd>
+			<xsl:text>- </xsl:text>
+			<xsl:value-of select="text()" />
+		</dd>
+	</xsl:template>
+
+	<xsl:template match="cpannotationschema:reengineeredFrom">
+
+		<xsl:choose>
+			<xsl:when test="@*:resource">
+				<dd>
+					<xsl:text>- </xsl:text>
+					<a href="{@*:resource}">
+						<xsl:value-of select="@*:resource" />
+					</a>
+					<xsl:text> (</xsl:text>
+					<a href="{$lode-external-url}/extract?url={@*:resource}">
+						<xsl:value-of
+							select="f:getDescriptionLabel('visualiseitwith')" />
+						LODE
+					</a>
+					<xsl:text>)</xsl:text>
+				</dd>
+			</xsl:when>
+			<xsl:otherwise>
+				<dd>
+					<xsl:text>- </xsl:text>
+					<xsl:value-of select="text()" />
+				</dd>
+			</xsl:otherwise>
+		</xsl:choose>
+
+	</xsl:template>
+
+
 
 	<xsl:template match="dc:title[f:isInLanguage(.)]">
 		<xsl:call-template name="get.title" />
@@ -686,27 +757,15 @@
 		</xsl:choose>
 	</xsl:function>
 
-	<!-- <xsl:function name="f:getLabel" as="xs:string">
-		<xsl:param name="iri" as="xs:string" />
-
-		<xsl:variable name="node" select="$root//rdf:RDF/element()[(@*:about = $iri or @*:ID = $iri) and exists(rdfs:label)][1]" as="element()*" />
-		<xsl:choose>
-			<xsl:when test="exists($node/rdfs:label)">
-				<xsl:value-of select="$node/rdfs:label[f:isInLanguage(.)]" />
-			</xsl:when>
-			<xsl:otherwise>
-				<xsl:variable name="prefix" select="f:getPrefixFromIRI($iri)" as="xs:string*" />
-				<xsl:choose>
-					<xsl:when test="empty($prefix)">
-						<xsl:value-of select="$iri" />
-					</xsl:when>
-					<xsl:otherwise>
-						<xsl:value-of select="concat($prefix,':',substring-after($iri, $prefixes-uris[index-of($prefixes-uris,$prefix)[1] + 1]))" />
-					</xsl:otherwise>
-				</xsl:choose>
-			</xsl:otherwise>
-		</xsl:choose>
-	</xsl:function> -->
+	<!-- <xsl:function name="f:getLabel" as="xs:string"> <xsl:param name="iri" 
+		as="xs:string" /> <xsl:variable name="node" select="$root//rdf:RDF/element()[(@*:about 
+		= $iri or @*:ID = $iri) and exists(rdfs:label)][1]" as="element()*" /> <xsl:choose> 
+		<xsl:when test="exists($node/rdfs:label)"> <xsl:value-of select="$node/rdfs:label[f:isInLanguage(.)]" 
+		/> </xsl:when> <xsl:otherwise> <xsl:variable name="prefix" select="f:getPrefixFromIRI($iri)" 
+		as="xs:string*" /> <xsl:choose> <xsl:when test="empty($prefix)"> <xsl:value-of 
+		select="$iri" /> </xsl:when> <xsl:otherwise> <xsl:value-of select="concat($prefix,':',substring-after($iri, 
+		$prefixes-uris[index-of($prefixes-uris,$prefix)[1] + 1]))" /> </xsl:otherwise> 
+		</xsl:choose> </xsl:otherwise> </xsl:choose> </xsl:function> -->
 	<xsl:function name="f:getLabel" as="xs:string">
 		<xsl:param name="iri" as="xs:string" />
 
@@ -722,8 +781,8 @@
 				<xsl:variable name="localName" as="xs:string?">
 					<xsl:variable name="current-index"
 						select="if (contains($iri,'#')) 
-						then f:string-first-index-of($iri,'#')
-						else f:string-last-index-of(replace($iri,'://','---'),'/')"
+                                    then f:string-first-index-of($iri,'#') 
+                                    else f:string-last-index-of(replace($iri,'://','---'),'/')"
 						as="xs:integer?" />
 					<xsl:if
 						test="exists($current-index) and string-length($iri) != $current-index">
@@ -1128,6 +1187,7 @@
 		<xsl:call-template name="get.version" />
 		<xsl:call-template name="get.author" />
 		<xsl:call-template name="get.original.source" />
+		<xsl:call-template name="get.entity.isCloneOf" />
 	</xsl:template>
 
 	<xsl:template name="get.original.source">
@@ -1175,6 +1235,7 @@
 						tunnel="yes" />
 				</xsl:call-template>
 				<xsl:call-template name="get.entity.punning" />
+				<!--  <xsl:call-template name="get.entity.isCloneOf" />-->
 			</dl>
 		</xsl:if>
 	</xsl:template>
@@ -1182,7 +1243,7 @@
 	<xsl:template name="get.individual.description">
 		<xsl:variable name="hasAssertions"
 			select="some $el in element() satisfies (some $prop in (/rdf:RDF/(owl:ObjectProperty|owl:DatatypeProperty)/(@*:about|@*:ID)) satisfies $prop = concat(namespace-uri($el),local-name($el)))"
-				as="xs:boolean" />
+			as="xs:boolean" />
 		<xsl:if
 			test="exists(rdf:type) or f:hasDisjoints(.) or f:hasSameAs(.) or $hasAssertions or f:hasPunning(.)">
 			<dl class="description">
@@ -1268,6 +1329,31 @@
 					</xsl:if>
 				</xsl:for-each>
 			</dd>
+		</xsl:if>
+	</xsl:template>
+
+	<xsl:template name="get.entity.isCloneOf">
+		<xsl:if test="exists(cpannotationschema:isCloneOf)">
+			<dl class="isCloneOf">
+				<dt>
+					<xsl:value-of
+						select="f:getDescriptionLabel('isCloneOf')" />
+				</dt>
+				<xsl:for-each select="cpannotationschema:isCloneOf">
+					<dd>
+						<xsl:choose>
+							<xsl:when test="normalize-space(@*:resource) = ''">
+								<xsl:value-of select="$ontology-url" />
+							</xsl:when>
+							<xsl:otherwise>
+								<a href="{@*:resource}">
+									<xsl:value-of select="@*:resource" />
+								</a>
+							</xsl:otherwise>
+						</xsl:choose>
+					</dd>
+				</xsl:for-each>
+			</dl>
 		</xsl:if>
 	</xsl:template>
 
@@ -1645,28 +1731,14 @@
 		<span class="markdown">
 			<xsl:value-of select="text()" />
 		</span>
-		<!--
-		<xsl:for-each select="text()">
-			<xsl:for-each select="tokenize(.,$n)">
-				<xsl:if test="normalize-space(.) != ''">
-					<p>
-						<xsl:variable name="withLinks" select="replace(.,'\[\[([^\[\]]+)\]\[([^\[\]]+)\]\]','@@@$1@@$2@@@')" />
-						<xsl:for-each select="tokenize($withLinks,'@@@')">
-							<xsl:choose>
-								<xsl:when test="matches(.,'@@')">
-									<xsl:variable name="tokens" select="tokenize(.,'@@')" />
-									<a href="{$tokens[1]}"><xsl:value-of select="$tokens[2]" /></a>
-								</xsl:when>
-								<xsl:otherwise>
-									<xsl:value-of select="." />
-								</xsl:otherwise>
-							</xsl:choose>
-						</xsl:for-each>
-					</p>
-				</xsl:if>
-			</xsl:for-each>
-		</xsl:for-each>
-		-->
+		<!-- <xsl:for-each select="text()"> <xsl:for-each select="tokenize(.,$n)"> 
+			<xsl:if test="normalize-space(.) != ''"> <p> <xsl:variable name="withLinks" 
+			select="replace(.,'\[\[([^\[\]]+)\]\[([^\[\]]+)\]\]','@@@$1@@$2@@@')" /> 
+			<xsl:for-each select="tokenize($withLinks,'@@@')"> <xsl:choose> <xsl:when 
+			test="matches(.,'@@')"> <xsl:variable name="tokens" select="tokenize(.,'@@')" 
+			/> <a href="{$tokens[1]}"><xsl:value-of select="$tokens[2]" /></a> </xsl:when> 
+			<xsl:otherwise> <xsl:value-of select="." /> </xsl:otherwise> </xsl:choose> 
+			</xsl:for-each> </p> </xsl:if> </xsl:for-each> </xsl:for-each> -->
 	</xsl:template>
 
 	<xsl:template name="get.title">
@@ -1721,6 +1793,146 @@
 					:
 				</dt>
 				<xsl:apply-templates select="owl:imports" />
+			</dl>
+		</xsl:if>
+	</xsl:template>
+
+	<xsl:template name="get.extractedFrom">
+		<xsl:if test="exists(cpannotationschema:extractedFrom)">
+			<dl>
+				<dt>
+					<xsl:value-of
+						select="f:getDescriptionLabel('extractedFrom')" />
+					:
+				</dt>
+				<xsl:apply-templates
+					select="cpannotationschema:extractedFrom" />
+			</dl>
+		</xsl:if>
+	</xsl:template>
+
+	<xsl:template name="get.isSpecializationOf">
+		<xsl:if test="exists(cpannotationschema:isSpecializationOf)">
+			<dl>
+				<dt>
+					<xsl:value-of
+						select="f:getDescriptionLabel('isSpecializationOf')" />
+					:
+				</dt>
+				<xsl:apply-templates
+					select="cpannotationschema:isSpecializationOf" />
+			</dl>
+		</xsl:if>
+	</xsl:template>
+
+	<xsl:template name="get.hasComponent">
+		<xsl:if test="exists(cpannotationschema:hasComponent)">
+			<dl>
+				<dt>
+					<xsl:value-of
+						select="f:getDescriptionLabel('hasComponent')" />
+					:
+				</dt>
+				<xsl:apply-templates
+					select="cpannotationschema:hasComponent" />
+			</dl>
+		</xsl:if>
+	</xsl:template>
+
+	<xsl:template name="get.coversrequirements">
+		<xsl:if test="exists(cpannotationschema:coversRequirements)">
+			<dl>
+				<dt>
+					<xsl:value-of
+						select="f:getDescriptionLabel('coversRequirements')" />
+					:
+				</dt>
+				<xsl:apply-templates
+					select="cpannotationschema:coversRequirements" />
+			</dl>
+		</xsl:if>
+	</xsl:template>
+
+	<xsl:template name="get.hasConsequences">
+		<xsl:if test="exists(cpannotationschema:hasConsequences)">
+			<dl>
+				<dt>
+					<xsl:value-of
+						select="f:getDescriptionLabel('hasConsequences')" />
+					:
+				</dt>
+				<xsl:apply-templates
+					select="cpannotationschema:hasConsequences" />
+			</dl>
+		</xsl:if>
+	</xsl:template>
+
+	<xsl:template name="get.hasIntent">
+		<xsl:if test="exists(cpannotationschema:hasIntent)">
+			<dl>
+				<dt>
+					<xsl:value-of
+						select="f:getDescriptionLabel('hasIntent')" />
+					:
+				</dt>
+				<xsl:apply-templates
+					select="cpannotationschema:hasIntent" />
+			</dl>
+		</xsl:if>
+	</xsl:template>
+
+	<xsl:template name="get.hasUnitTest">
+		<xsl:if test="exists(cpannotationschema:hasUnitTest)">
+			<dl>
+				<dt>
+					<xsl:value-of
+						select="f:getDescriptionLabel('hasUnitTest')" />
+					:
+				</dt>
+				<xsl:apply-templates
+					select="cpannotationschema:hasUnitTest" />
+			</dl>
+		</xsl:if>
+	</xsl:template>
+
+	<xsl:template name="get.reengineeredFrom">
+		<xsl:if test="exists(cpannotationschema:reengineeredFrom)">
+			<dl>
+				<dt>
+					<xsl:value-of
+						select="f:getDescriptionLabel('reengineeredFrom')" />
+					:
+				</dt>
+				<xsl:apply-templates
+					select="cpannotationschema:reengineeredFrom" />
+			</dl>
+		</xsl:if>
+	</xsl:template>
+
+	<xsl:template name="get.relatedCPs">
+		<xsl:if test="exists(cpannotationschema:relatedCPs)">
+			<dl>
+				<dt>
+					<xsl:value-of
+						select="f:getDescriptionLabel('relatedCPs')" />
+					:
+				</dt>
+				<xsl:apply-templates
+					select="cpannotationschema:relatedCPs" />
+			</dl>
+		</xsl:if>
+	</xsl:template>
+
+	<xsl:template name="get.scenarios">
+		<xsl:if test="exists(cpannotationschema:scenarios)">
+			<dl>
+				<dt>
+					<xsl:value-of
+						select="f:getDescriptionLabel('scenarios')" />
+					:
+				</dt>
+				<xsl:apply-templates
+					select="cpannotationschema:scenarios" />
 			</dl>
 		</xsl:if>
 	</xsl:template>
@@ -2199,16 +2411,16 @@
 				elemento prima di me -->
 			<xsl:when
 				test="
-				(some $item in ($el/preceding-sibling::element()[name() = name($el)]) satisfies $item/@xml:lang = $lang) or
-				(not($isRightLang) and
-					(
-						(some $item in ($el/following-sibling::element()[name() = name($el)]) satisfies $item/@xml:lang = $lang) or
-						(some $item in ($el/preceding-sibling::element()[name() = name($el)]) satisfies $item/@xml:lang = $def-lang) or
-						not($isDefLang) and
-							(
-								(some $item in ($el/following-sibling::element()[name() = name($el)]) satisfies $item/@xml:lang = $def-lang) or
-								exists($el/preceding-sibling::element()[name() = name($el)]))
-							))">
+                (some $item in ($el/preceding-sibling::element()[name() = name($el)]) satisfies $item/@xml:lang = $lang) or
+                (not($isRightLang) and
+                    (
+                        (some $item in ($el/following-sibling::element()[name() = name($el)]) satisfies $item/@xml:lang = $lang) or
+                        (some $item in ($el/preceding-sibling::element()[name() = name($el)]) satisfies $item/@xml:lang = $def-lang) or
+                        not($isDefLang) and
+                            (
+                                (some $item in ($el/following-sibling::element()[name() = name($el)]) satisfies $item/@xml:lang = $def-lang) or
+                                exists($el/preceding-sibling::element()[name() = name($el)]))
+                            ))">
 				<xsl:value-of select="false()" />
 			</xsl:when>
 			<xsl:otherwise>
