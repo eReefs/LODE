@@ -35,10 +35,13 @@
 
 	<xsl:param name="lang" select="'en'" as="xs:string" />
 	<xsl:param name="css-location" select="'./'" as="xs:string" />
-	<xsl:param name="source" as="xs:string" select="''" />
+	<xsl:param name="lode-home-url" as="xs:string" select="'http://www.essepuntato.it/lode'" />
+	<xsl:param name="lode-extract-url" as="xs:string" select="'/lode/extract?url='" />
+	<xsl:param name="lode-source-url" as="xs:string" select="'/lode-source?url='" />
 	<xsl:param name="ontology-url" as="xs:string" select="''" />
-	<xsl:param name="lode-external-url" as="xs:string"
-		select="''" />
+	<xsl:param name="vendor-css" select="''" as="xs:string" />
+	<xsl:param name="vendor-name" select="''" as="xs:string" />
+	<xsl:param name="vendor-url" select="''" as="xs:string" />
 	<xsl:param name="webvowl" as="xs:string" select="''" />
 
 	<xsl:variable name="def-lang" select="'en'" as="xs:string" />
@@ -138,6 +141,9 @@
 			type="text/css" />
 		<link href="{$css-location}extra.css" rel="stylesheet"
 			type="text/css" />
+		<xsl:if test="string-length($vendor-css) != 0">
+			<link href="{$vendor-css}" rel="stylesheet" type="text/css" />
+		</xsl:if>
 		<link rel="shortcut icon" href="{$css-location}favicon.ico" />
 		<script src="{$css-location}jquery.js"><!-- Comment for compatibility -->
 		</script>
@@ -213,12 +219,14 @@
 						:
 					</dt>
 					<dd>
-						<a href="{$source}?url={$ontology-url}">
+						<a href="{$lode-source-url}{$ontology-url}">
 							<xsl:value-of
 								select="f:getDescriptionLabel('ontologysource')" />
 						</a>
-						-
-						<a href="{$webvowl}{$ontology-url}">WebVowl</a>
+						<xsl:if test="string-length($webvowl) != 0">
+							-
+							<a href="{$webvowl}{$ontology-url}">WebVowl</a>
+						</xsl:if>
 					</dd>
 				</dl>
 				<xsl:apply-templates
@@ -243,7 +251,7 @@
 			<p class="endnote">
 				<xsl:value-of select="f:getDescriptionLabel('endnote')" />
 				<xsl:text> </xsl:text>
-				<a href="http://www.essepuntato.it/lode">LODE</a>
+				<a href="{$lode-home-url}">LODE</a>
 				<xsl:text>, </xsl:text>
 				<em>Live OWL Documentation Environment</em>
 				<xsl:text>, </xsl:text>
@@ -251,6 +259,15 @@
 					select="f:getDescriptionLabel('developedby')" />
 				<xsl:text> </xsl:text>
 				<a href="http://www.essepuntato.it">Silvio Peroni</a>
+				<xsl:if test="string-length($vendor-name) != 0">
+					<xsl:text>, </xsl:text>
+					<xsl:value-of
+						select="f:getDescriptionLabel('hostedby')" />
+					<xsl:text> </xsl:text>
+					<a href="{$vendor-url}">
+						<xsl:value-of select="$vendor-name" />
+					</a>
+				</xsl:if>
 				.
 			</p>
 		</body>
@@ -364,7 +381,7 @@
 				<xsl:value-of select="@*:resource" />
 			</a>
 			<xsl:text> (</xsl:text>
-			<a href="{$lode-external-url}/extract?url={@*:resource}">
+			<a href="{$lode-extract-url}{@*:resource}">
 				<xsl:value-of
 					select="f:getDescriptionLabel('visualiseitwith')" />
 				LODE
@@ -384,7 +401,7 @@
 				<xsl:value-of select="@*:resource" />
 			</a>
 			<xsl:text> (</xsl:text>
-			<a href="{$lode-external-url}/extract?url={@*:resource}">
+			<a href="{$lode-extract-url}{@*:resource}">
 				<xsl:value-of
 					select="f:getDescriptionLabel('visualiseitwith')" />
 				LODE
@@ -411,7 +428,7 @@
 						<xsl:value-of select="@*:resource" />
 					</a>
 					<xsl:text> (</xsl:text>
-					<a href="{$lode-external-url}/extract?url={@*:resource}">
+					<a href="{$lode-extract-url}{@*:resource}">
 						<xsl:value-of
 							select="f:getDescriptionLabel('visualiseitwith')" />
 						LODE
@@ -484,7 +501,7 @@
 					<xsl:text> (</xsl:text>
 					<!-- <a href="http://www.essepuntato.it/lode/owlapi/{@*:resource}"><xsl:value-of
 						select="f:getDescriptionLabel('visualiseitwith')" /> LODE</a> -->
-					<a href="{$lode-external-url}/extract?url={@*:resource}">
+					<a href="{$lode-extract-url}{@*:resource}">
 						<xsl:value-of
 							select="f:getDescriptionLabel('visualiseitwith')" />
 						LODE

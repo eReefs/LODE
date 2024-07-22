@@ -71,6 +71,7 @@
 	<endnote>Ce document HTML a été obtenu par traitement du code source
 		d'ontologie via</endnote>
 	<developedby>Développé par</developedby>
+	<hostedby>hébergé par</hostedby>
 	<or>ou</or>
 	<classtoc>les classes</classtoc>
 	<objectpropertytoc>propriétés d'objets</objectpropertytoc>
@@ -78,7 +79,7 @@
 	<annotationpropertytoc>propriétés d'annotations</annotationpropertytoc>
 	<namedindividualtoc>les individus nommés</namedindividualtoc>
 	<hascharacteristics>a pour caractéristiques</hascharacteristics>
-	<!-- Translation of the following labels from English to French is courtesy 
+	<!-- Translation of the following labels from English to French is courtesy
 		of Eleonora <eleonora.marzi@unibo.it> -->
 	<coversRequirements>Réponds Besoins</coversRequirements>
 	<extractedFrom>Tiré de</extractedFrom>
