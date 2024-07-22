@@ -1,6 +1,8 @@
 package it.essepuntato.lode;
 
 import java.nio.file.Path;
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
@@ -11,6 +13,8 @@ public class LODEConfiguration {
 
 	private final String basePath;
 	private String baseUrl = "/lode";
+	private String buildDate = "";
+	private String buildVersion = "";
 	private String defaultLang = "en";
 	private int maxTentative = 3;
 	private String vendorCss = "";
@@ -58,9 +62,40 @@ public class LODEConfiguration {
 		return instance;
 	}
 
+	public static LODEConfiguration getInstance(ServletContext context, HttpServletRequest request) {
+		if (instance == null){
+			String basePath = context.getRealPath(".");
+			String baseUrl = context.getContextPath();
+			if (request != null){
+				String hostname = request.getServerName();
+				int port = request.getServerPort();
+				boolean isSecure = request.isSecure();
+				if (isSecure && (port == 443)){
+					baseUrl = "https://" + hostname + baseUrl;
+				} else if (isSecure){
+					baseUrl = "https://" + hostname + ":" + port + baseUrl;
+				} else if (port == 80){
+					baseUrl = "http://" + hostname + baseUrl;
+				} else {
+					baseUrl = "http://" + hostname + ":" + port + baseUrl;
+				}
+			}
+			instance = LODEConfiguration.getInstance(basePath, baseUrl);
+		}
+		return instance;
+	}
+
 
 	public String getBaseUrl() {
         return this.baseUrl;
+    }
+
+	public String getBuildDate() {
+        return this.buildDate;
+    }
+
+	public String getBuildVersion() {
+        return this.buildVersion;
     }
 
 	public String getCssLocation() {
@@ -72,7 +107,11 @@ public class LODEConfiguration {
 	}
 
 	public String getExtractUrl() {
-        return this.baseUrl + "/extract?url=";
+        return this.baseUrl + "/extract";
+    }
+
+	public String getHomeUrl() {
+        return this.baseUrl + "/";
     }
 
 	public int getMaxTentative() {
@@ -84,7 +123,7 @@ public class LODEConfiguration {
     }
 
 	public String getSourceUrl() {
-        return this.baseUrl + "/source?url=";
+        return this.baseUrl + "/source";
     }
 
 	public String getVendorCss() {

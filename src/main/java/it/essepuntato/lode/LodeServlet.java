@@ -137,7 +137,7 @@ public class LodeServlet extends HttpServlet {
 				}
 
 				String lang = request.getParameter("lang");
-				if (lang == null) {
+				if (lang == null || lang.isEmpty()) {
 					lang = this.conf.getDefaultLang();
 				}
 
@@ -456,6 +456,7 @@ public class LodeServlet extends HttpServlet {
 		transformer.setParameter("lang", lang);
 		transformer.setParameter("ontology-url", ontologyUrl);
 		transformer.setParameter("lode-extract-url", this.conf.getExtractUrl());
+		transformer.setParameter("lode-home-url", this.conf.getHomeUrl());
 		transformer.setParameter("lode-source-url", this.conf.getSourceUrl());
 		transformer.setParameter("vendor-css", this.conf.getVendorCss());
 		transformer.setParameter("vendor-name", this.conf.getVendorName());

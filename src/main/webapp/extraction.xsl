@@ -36,8 +36,8 @@
 	<xsl:param name="lang" select="'en'" as="xs:string" />
 	<xsl:param name="css-location" select="'./'" as="xs:string" />
 	<xsl:param name="lode-home-url" as="xs:string" select="'http://www.essepuntato.it/lode'" />
-	<xsl:param name="lode-extract-url" as="xs:string" select="'/lode/extract?url='" />
-	<xsl:param name="lode-source-url" as="xs:string" select="'/lode-source?url='" />
+	<xsl:param name="lode-extract-url" as="xs:string" select="'/lode/extract'" />
+	<xsl:param name="lode-source-url" as="xs:string" select="'/lode/source'" />
 	<xsl:param name="ontology-url" as="xs:string" select="''" />
 	<xsl:param name="vendor-css" select="''" as="xs:string" />
 	<xsl:param name="vendor-name" select="''" as="xs:string" />
@@ -219,7 +219,7 @@
 						:
 					</dt>
 					<dd>
-						<a href="{$lode-source-url}{$ontology-url}">
+						<a href="{$lode-source-url}?url={$ontology-url}">
 							<xsl:value-of
 								select="f:getDescriptionLabel('ontologysource')" />
 						</a>
@@ -381,7 +381,7 @@
 				<xsl:value-of select="@*:resource" />
 			</a>
 			<xsl:text> (</xsl:text>
-			<a href="{$lode-extract-url}{@*:resource}">
+			<a href="{$lode-extract-url}?url={@*:resource}">
 				<xsl:value-of
 					select="f:getDescriptionLabel('visualiseitwith')" />
 				LODE
@@ -401,7 +401,7 @@
 				<xsl:value-of select="@*:resource" />
 			</a>
 			<xsl:text> (</xsl:text>
-			<a href="{$lode-extract-url}{@*:resource}">
+			<a href="{$lode-extract-url}?url={@*:resource}">
 				<xsl:value-of
 					select="f:getDescriptionLabel('visualiseitwith')" />
 				LODE
@@ -428,7 +428,7 @@
 						<xsl:value-of select="@*:resource" />
 					</a>
 					<xsl:text> (</xsl:text>
-					<a href="{$lode-extract-url}{@*:resource}">
+					<a href="{$lode-extract-url}?url={@*:resource}">
 						<xsl:value-of
 							select="f:getDescriptionLabel('visualiseitwith')" />
 						LODE
@@ -501,7 +501,7 @@
 					<xsl:text> (</xsl:text>
 					<!-- <a href="http://www.essepuntato.it/lode/owlapi/{@*:resource}"><xsl:value-of
 						select="f:getDescriptionLabel('visualiseitwith')" /> LODE</a> -->
-					<a href="{$lode-extract-url}{@*:resource}">
+					<a href="{$lode-extract-url}?url={@*:resource}">
 						<xsl:value-of
 							select="f:getDescriptionLabel('visualiseitwith')" />
 						LODE
