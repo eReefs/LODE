@@ -30,11 +30,23 @@ FROM builder as jetty
 
 COPY ./configure-lode-environment.sh ./
 
-ARG LODE_EXTERNAL_URL
-ARG WEBVOWL_EXTERNAL_URL
-ARG USE_HTTPS
+ARG DEFAULT_LANG \
+	LODE_EXTERNAL_URL \
+	MAX_TENTATIVE \
+	VENDOR_CSS \
+	VENDOR_NAME \
+	VENDOR_URL \
+	WEBVOWL_EXTERNAL_URL
+
+ENV LODE_CONFIG="/opt/lode.config"
 COPY ./configure-lode-environment.sh ./
-RUN LODE_CONTEXT_PATH=./src/main/webapp/; \
+RUN DEFAULT_LANG="${DEFAULT_LANG:-en}" \
+	LODE_EXTERNAL_URL="${LODE_EXTERNAL_URL:-}" \
+	MAX_TENTATIVE="${MAX_TENTATIVE:-3}" \
+	VENDOR_CSS="${VENDOR_CSS:-}" \
+	VENDOR_NAME="${VENDOR_NAME:-}" \
+	VENDOR_URL="${VENDOR_URL:-}" \
+	WEBVOWL_EXTERNAL_URL="${WEBVOWL_EXTERNAL_URL:-}" \
 	. ./configure-lode-environment.sh
 
 VOLUME /root/.m2
@@ -43,7 +55,8 @@ CMD [ \
 	"clean", \
 	"jetty:run", \
 	"-Djetty.reload=automatic", \
-	"-Djetty.scanIntervalSeconds=5" \
+	"-Djetty.scanIntervalSeconds=5", \
+	"-DLODE_CONFIG=${LODE_CONFIG}" \
 ]
 
 #------------------------------------------------------------------------------
@@ -68,11 +81,11 @@ RUN --mount=target=/var/lib/apt/lists,type=cache,sharing=locked \
 ARG LODE_CONTEXT="lode"
 COPY --from=builder /opt/target/*.war "${CATALINA_HOME}/webapps/${LODE_CONTEXT}.war"
 
-# Arrange for the tomcat startup process to drop the env-derived
-# runtime configuration properties file in the webapp context root.
-ENV LODE_CONTEXT="${LODE_CONTEXT}" \
+# Arrange for the tomcat startup process to populate the
+# env-derived runtime configuration properties file.
+ENV LODE_CONFIG="${CATALINA_HOME}/conf/lode.properties" \
+	LODE_CONTEXT="${LODE_CONTEXT}" \
 	LODE_CONTEXT_PATH="${CATALINA_HOME}/webapps/${LODE_CONTEXT}"
+ENV CATALINA_OPTS="${CATALINA_OPTS} -DLODE_CONFIG='${LODE_CONFIG}'"
 COPY ./configure-lode-environment.sh "${CATALINA_HOME}/conf/"
-RUN echo ". '${CATALINA_HOME}/conf/configure-lode-environment.sh'" >> "${CATALINA_HOME}/bin/setenv.sh" \
-	&& unzip "${LODE_CONTEXT_PATH}.war" -d "${LODE_CONTEXT_PATH}" \
-	&& rm "${LODE_CONTEXT_PATH}.war"
+RUN echo ". '${CATALINA_HOME}/conf/configure-lode-environment.sh'" >> "${CATALINA_HOME}/bin/setenv.sh"
