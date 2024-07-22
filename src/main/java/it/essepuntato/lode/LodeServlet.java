@@ -30,6 +30,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -93,10 +94,6 @@ import org.owasp.encoder.Encode;
  */
 public class LodeServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
-	private String xsltURL = "http://lode.sourceforge.net/xslt";
-	private String cssLocation = "http://lode.sourceforge.net/css/";
-	private int maxTentative = 3;
-	private String CONFIG = "config.properties";
 	private LODEConfiguration conf;
 
 	/**
@@ -112,15 +109,15 @@ public class LodeServlet extends HttpServlet {
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
+		resolveConfiguration(request);
 		response.setContentType("text/html");
-
-		resolvePaths(request); /* Used instead of the SourceForge repo */
 		response.setCharacterEncoding("UTF-8");
 		PrintWriter out = response.getWriter();
 
 		SourceExtractor extractor = new SourceExtractor();
 		extractor.addMimeTypes(MimeType.mimeTypes);
 
+		int maxTentative = this.conf.getMaxTentative();
 		for (int i = 0; i < maxTentative; i++) {
 			try {
 				String stringURL = request.getParameter("url");
@@ -141,7 +138,7 @@ public class LodeServlet extends HttpServlet {
 
 				String lang = request.getParameter("lang");
 				if (lang == null) {
-					lang = "en";
+					lang = this.conf.getDefaultLang();
 				}
 
 				if (useOWLAPI) {
@@ -169,22 +166,27 @@ public class LodeServlet extends HttpServlet {
 		}
 	}
 
-	private void resolvePaths(HttpServletRequest request) {
-		if (conf == null) {
-			conf = LODEConfiguration.getInstance(getServletContext().getRealPath(CONFIG));
+	private void resolveConfiguration(HttpServletRequest request) {
+		if (this.conf == null){
+			ServletContext context = getServletContext();
+			String basePath = context.getRealPath(".");
+			String baseUrl = context.getContextPath();
+			if (request != null){
+				String hostname = request.getServerName();
+				int port = request.getServerPort();
+				boolean isSecure = request.isSecure();
+				if (isSecure && (port == 443)){
+					baseUrl = "https://" + hostname + baseUrl;
+				} else if (isSecure){
+					baseUrl = "https://" + hostname + ":" + port + baseUrl;
+				} else if (port == 80){
+					baseUrl = "http://" + hostname + baseUrl;
+				} else {
+					baseUrl = "http://" + hostname + ":" + port + baseUrl;
+				}
+			}
+			this.conf = LODEConfiguration.getInstance(basePath, baseUrl);
 		}
-		xsltURL = getServletContext().getRealPath("extraction.xsl");
-		String requestURL = request.getRequestURL().toString();
-		int start = requestURL.indexOf(":");
-		int index = requestURL.lastIndexOf("/");
-		String protocol = request.getProtocol();
-		protocol = protocol.substring(0, protocol.indexOf("/")).toLowerCase();
-		cssLocation = "http" + requestURL.substring(start, index) + File.separator;
-		if (conf.useHTTPs()) {
-			cssLocation = "https" + requestURL.substring(start, index) + File.separator;
-		}
-		System.out.println("____#### " + request.getServerPort() + " : " + protocol);
-
 	}
 
 	/*
@@ -345,14 +347,7 @@ public class LodeServlet extends HttpServlet {
 
 	private OWLOntology parseWithReasoner(OWLOntologyManager manager, OWLOntology ontology) {
 		try {
-			if (conf == null) {
-				conf = LODEConfiguration.getInstance(getServletContext().getRealPath(CONFIG));
-			}
-			if (conf.useHTTPs()) {
-				PelletOptions.load(new URL("https://" + cssLocation + "pellet.properties"));
-			} else {
-				PelletOptions.load(new URL("http://" + cssLocation + "pellet.properties"));
-			}
+			PelletOptions.load(new URL(this.conf.getPelletPropertiesUrl()));
 			PelletReasoner reasoner = PelletReasonerFactory.getInstance().createReasoner(ontology);
 			reasoner.getKB().prepare();
 			List<InferredAxiomGenerator<? extends OWLAxiom>> generators = new ArrayList<InferredAxiomGenerator<? extends OWLAxiom>>();
@@ -455,18 +450,17 @@ public class LodeServlet extends HttpServlet {
 
 		ByteArrayOutputStream output = new ByteArrayOutputStream();
 
-		if (conf == null) {
-			conf = LODEConfiguration.getInstance(getServletContext().getRealPath(CONFIG));
-		}
+		Transformer transformer = tfactory.newTransformer(new StreamSource(this.conf.getXsltPath()));
 
-		Transformer transformer = tfactory.newTransformer(new StreamSource(xsltURL));
-
-		transformer.setParameter("css-location", cssLocation);
+		transformer.setParameter("css-location", this.conf.getCssLocation());
 		transformer.setParameter("lang", lang);
 		transformer.setParameter("ontology-url", ontologyUrl);
-		transformer.setParameter("source", cssLocation + "source");
-		transformer.setParameter("lode-external-url", conf.getExternalURL());
-		transformer.setParameter("webvowl", conf.getWebvowl());
+		transformer.setParameter("lode-extract-url", this.conf.getExtractUrl());
+		transformer.setParameter("lode-source-url", this.conf.getSourceUrl());
+		transformer.setParameter("vendor-css", this.conf.getVendorCss());
+		transformer.setParameter("vendor-name", this.conf.getVendorName());
+		transformer.setParameter("vendor-url", this.conf.getVendorUrl());
+		transformer.setParameter("webvowl", this.conf.getWebvowl());
 
 		StreamSource inputSource = new StreamSource(new StringReader(source));
 

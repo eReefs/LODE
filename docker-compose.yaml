@@ -1,8 +1,12 @@
 ---
 x-lode-config: &lode-config
-  LODE_EXTERNAL_URL: http://localhost:8080/lode
-  WEBVOWL_EXTERNAL_URL: http://visualdataweb.de/webvowl/#iri=
-  USE_HTTPS: "false"
+  DEFAULT_LANG: "${DEFAULT_LANG:-en}"
+  LODE_EXTERNAL_URL: "${LODE_EXTERNAL_URL:-}"
+  MAX_TENTATIVE: "${MAX_TENTATIVE:-3}"
+  VENDOR_CSS: "${VENDOR_CSS:-}"
+  VENDOR_NAME: "${VENDOR_NAME:-}"
+  VENDOR_URL: "${VENDOR_URL:-}"
+  WEBVOWL_EXTERNAL_URL: "${WEBVOWL_EXTERNAL_URL:-}"
 
 services:
   jetty:

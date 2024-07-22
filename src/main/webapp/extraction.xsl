@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Copyright (c) 2010-2014, Silvio Peroni <essepuntato@gmail.com> Permission 
-	to use, copy, modify, and/or distribute this software for any purpose with 
-	or without fee is hereby granted, provided that the above copyright notice 
-	and this permission notice appear in all copies. THE SOFTWARE IS PROVIDED 
-	"AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE 
-	INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT 
-	SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL 
-	DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, 
-	WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING 
+<!-- Copyright (c) 2010-2014, Silvio Peroni <essepuntato@gmail.com> Permission
+	to use, copy, modify, and/or distribute this software for any purpose with
+	or without fee is hereby granted, provided that the above copyright notice
+	and this permission notice appear in all copies. THE SOFTWARE IS PROVIDED
+	"AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE
+	INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT
+	SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
+	DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+	WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
 	OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE. -->
 <xsl:stylesheet
 	xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
@@ -35,10 +35,13 @@
 
 	<xsl:param name="lang" select="'en'" as="xs:string" />
 	<xsl:param name="css-location" select="'./'" as="xs:string" />
-	<xsl:param name="source" as="xs:string" select="''" />
+	<xsl:param name="lode-home-url" as="xs:string" select="'http://www.essepuntato.it/lode'" />
+	<xsl:param name="lode-extract-url" as="xs:string" select="'/lode/extract?url='" />
+	<xsl:param name="lode-source-url" as="xs:string" select="'/lode-source?url='" />
 	<xsl:param name="ontology-url" as="xs:string" select="''" />
-	<xsl:param name="lode-external-url" as="xs:string"
-		select="''" />
+	<xsl:param name="vendor-css" select="''" as="xs:string" />
+	<xsl:param name="vendor-name" select="''" as="xs:string" />
+	<xsl:param name="vendor-url" select="''" as="xs:string" />
 	<xsl:param name="webvowl" as="xs:string" select="''" />
 
 	<xsl:variable name="def-lang" select="'en'" as="xs:string" />
@@ -138,6 +141,9 @@
 			type="text/css" />
 		<link href="{$css-location}extra.css" rel="stylesheet"
 			type="text/css" />
+		<xsl:if test="string-length($vendor-css) != 0">
+			<link href="{$vendor-css}" rel="stylesheet" type="text/css" />
+		</xsl:if>
 		<link rel="shortcut icon" href="{$css-location}favicon.ico" />
 		<script src="{$css-location}jquery.js"><!-- Comment for compatibility -->
 		</script>
@@ -213,12 +219,14 @@
 						:
 					</dt>
 					<dd>
-						<a href="{$source}?url={$ontology-url}">
+						<a href="{$lode-source-url}{$ontology-url}">
 							<xsl:value-of
 								select="f:getDescriptionLabel('ontologysource')" />
 						</a>
-						-
-						<a href="{$webvowl}{$ontology-url}">WebVowl</a>
+						<xsl:if test="string-length($webvowl) != 0">
+							-
+							<a href="{$webvowl}{$ontology-url}">WebVowl</a>
+						</xsl:if>
 					</dd>
 				</dl>
 				<xsl:apply-templates
@@ -243,7 +251,7 @@
 			<p class="endnote">
 				<xsl:value-of select="f:getDescriptionLabel('endnote')" />
 				<xsl:text> </xsl:text>
-				<a href="http://www.essepuntato.it/lode">LODE</a>
+				<a href="{$lode-home-url}">LODE</a>
 				<xsl:text>, </xsl:text>
 				<em>Live OWL Documentation Environment</em>
 				<xsl:text>, </xsl:text>
@@ -251,6 +259,15 @@
 					select="f:getDescriptionLabel('developedby')" />
 				<xsl:text> </xsl:text>
 				<a href="http://www.essepuntato.it">Silvio Peroni</a>
+				<xsl:if test="string-length($vendor-name) != 0">
+					<xsl:text>, </xsl:text>
+					<xsl:value-of
+						select="f:getDescriptionLabel('hostedby')" />
+					<xsl:text> </xsl:text>
+					<a href="{$vendor-url}">
+						<xsl:value-of select="$vendor-name" />
+					</a>
+				</xsl:if>
 				.
 			</p>
 		</body>
@@ -279,7 +296,7 @@
 			select="substring($url,$index + 1)" as="xs:string?" />
 
 		<p class="image">
-			<!-- <span><xsl:value-of select="$index,$extension,string-length($url)" 
+			<!-- <span><xsl:value-of select="$index,$extension,string-length($url)"
 				separator=" - " /></span> -->
 			<object data="{@*:resource}">
 				<xsl:if test="$extension != ''">
@@ -364,7 +381,7 @@
 				<xsl:value-of select="@*:resource" />
 			</a>
 			<xsl:text> (</xsl:text>
-			<a href="{$lode-external-url}/extract?url={@*:resource}">
+			<a href="{$lode-extract-url}{@*:resource}">
 				<xsl:value-of
 					select="f:getDescriptionLabel('visualiseitwith')" />
 				LODE
@@ -384,7 +401,7 @@
 				<xsl:value-of select="@*:resource" />
 			</a>
 			<xsl:text> (</xsl:text>
-			<a href="{$lode-external-url}/extract?url={@*:resource}">
+			<a href="{$lode-extract-url}{@*:resource}">
 				<xsl:value-of
 					select="f:getDescriptionLabel('visualiseitwith')" />
 				LODE
@@ -411,7 +428,7 @@
 						<xsl:value-of select="@*:resource" />
 					</a>
 					<xsl:text> (</xsl:text>
-					<a href="{$lode-external-url}/extract?url={@*:resource}">
+					<a href="{$lode-extract-url}{@*:resource}">
 						<xsl:value-of
 							select="f:getDescriptionLabel('visualiseitwith')" />
 						LODE
@@ -482,9 +499,9 @@
 						<xsl:value-of select="@*:resource" />
 					</a>
 					<xsl:text> (</xsl:text>
-					<!-- <a href="http://www.essepuntato.it/lode/owlapi/{@*:resource}"><xsl:value-of 
+					<!-- <a href="http://www.essepuntato.it/lode/owlapi/{@*:resource}"><xsl:value-of
 						select="f:getDescriptionLabel('visualiseitwith')" /> LODE</a> -->
-					<a href="{$lode-external-url}/extract?url={@*:resource}">
+					<a href="{$lode-extract-url}{@*:resource}">
 						<xsl:value-of
 							select="f:getDescriptionLabel('visualiseitwith')" />
 						LODE
@@ -753,14 +770,14 @@
 		</xsl:choose>
 	</xsl:function>
 
-	<!-- <xsl:function name="f:getLabel" as="xs:string"> <xsl:param name="iri" 
-		as="xs:string" /> <xsl:variable name="node" select="$root//rdf:RDF/element()[(@*:about 
-		= $iri or @*:ID = $iri) and exists(rdfs:label)][1]" as="element()*" /> <xsl:choose> 
-		<xsl:when test="exists($node/rdfs:label)"> <xsl:value-of select="$node/rdfs:label[f:isInLanguage(.)]" 
-		/> </xsl:when> <xsl:otherwise> <xsl:variable name="prefix" select="f:getPrefixFromIRI($iri)" 
-		as="xs:string*" /> <xsl:choose> <xsl:when test="empty($prefix)"> <xsl:value-of 
-		select="$iri" /> </xsl:when> <xsl:otherwise> <xsl:value-of select="concat($prefix,':',substring-after($iri, 
-		$prefixes-uris[index-of($prefixes-uris,$prefix)[1] + 1]))" /> </xsl:otherwise> 
+	<!-- <xsl:function name="f:getLabel" as="xs:string"> <xsl:param name="iri"
+		as="xs:string" /> <xsl:variable name="node" select="$root//rdf:RDF/element()[(@*:about
+		= $iri or @*:ID = $iri) and exists(rdfs:label)][1]" as="element()*" /> <xsl:choose>
+		<xsl:when test="exists($node/rdfs:label)"> <xsl:value-of select="$node/rdfs:label[f:isInLanguage(.)]"
+		/> </xsl:when> <xsl:otherwise> <xsl:variable name="prefix" select="f:getPrefixFromIRI($iri)"
+		as="xs:string*" /> <xsl:choose> <xsl:when test="empty($prefix)"> <xsl:value-of
+		select="$iri" /> </xsl:when> <xsl:otherwise> <xsl:value-of select="concat($prefix,':',substring-after($iri,
+		$prefixes-uris[index-of($prefixes-uris,$prefix)[1] + 1]))" /> </xsl:otherwise>
 		</xsl:choose> </xsl:otherwise> </xsl:choose> </xsl:function> -->
 	<xsl:function name="f:getLabel" as="xs:string">
 		<xsl:param name="iri" as="xs:string" />
@@ -776,8 +793,8 @@
 			<xsl:otherwise>
 				<xsl:variable name="localName" as="xs:string?">
 					<xsl:variable name="current-index"
-						select="if (contains($iri,'#')) 
-                                    then f:string-first-index-of($iri,'#') 
+						select="if (contains($iri,'#'))
+                                    then f:string-first-index-of($iri,'#')
                                     else f:string-last-index-of(replace($iri,'://','---'),'/')"
 						as="xs:integer?" />
 					<xsl:if
@@ -1727,13 +1744,13 @@
 		<span class="markdown">
 			<xsl:value-of select="text()" />
 		</span>
-		<!-- <xsl:for-each select="text()"> <xsl:for-each select="tokenize(.,$n)"> 
-			<xsl:if test="normalize-space(.) != ''"> <p> <xsl:variable name="withLinks" 
-			select="replace(.,'\[\[([^\[\]]+)\]\[([^\[\]]+)\]\]','@@@$1@@$2@@@')" /> 
-			<xsl:for-each select="tokenize($withLinks,'@@@')"> <xsl:choose> <xsl:when 
-			test="matches(.,'@@')"> <xsl:variable name="tokens" select="tokenize(.,'@@')" 
-			/> <a href="{$tokens[1]}"><xsl:value-of select="$tokens[2]" /></a> </xsl:when> 
-			<xsl:otherwise> <xsl:value-of select="." /> </xsl:otherwise> </xsl:choose> 
+		<!-- <xsl:for-each select="text()"> <xsl:for-each select="tokenize(.,$n)">
+			<xsl:if test="normalize-space(.) != ''"> <p> <xsl:variable name="withLinks"
+			select="replace(.,'\[\[([^\[\]]+)\]\[([^\[\]]+)\]\]','@@@$1@@$2@@@')" />
+			<xsl:for-each select="tokenize($withLinks,'@@@')"> <xsl:choose> <xsl:when
+			test="matches(.,'@@')"> <xsl:variable name="tokens" select="tokenize(.,'@@')"
+			/> <a href="{$tokens[1]}"><xsl:value-of select="$tokens[2]" /></a> </xsl:when>
+			<xsl:otherwise> <xsl:value-of select="." /> </xsl:otherwise> </xsl:choose>
 			</xsl:for-each> </p> </xsl:if> </xsl:for-each> </xsl:for-each> -->
 	</xsl:template>
 
@@ -2389,7 +2406,7 @@
 		</xsl:if>
 	</xsl:template>
 
-	<!-- input: un elemento tipicamente contenente solo testo output: un booleano 
+	<!-- input: un elemento tipicamente contenente solo testo output: un booleano
 		che risponde se quell'elemento è quello giusto per la lingua considerata -->
 	<xsl:function name="f:isInLanguage" as="xs:boolean">
 		<xsl:param name="el" as="element()" />
@@ -2399,11 +2416,11 @@
 			select="$el/@xml:lang = $def-lang" as="xs:boolean" />
 
 		<xsl:choose>
-			<!-- Ritorno false se: - c'è qualche elemento prima di me del linguaggio 
-				giusto OR - io non sono del linguaggio giusto AND - c'è qualche elemento 
-				dopo di me del linguaggio giusto OR - c'è qualche elemento prima di me che 
-				è del linguaggio di default OR - io non sono del linguaggio di default AND 
-				- c'è qualche elemento dopo di me del linguaggio di default OR - c'è qualche 
+			<!-- Ritorno false se: - c'è qualche elemento prima di me del linguaggio
+				giusto OR - io non sono del linguaggio giusto AND - c'è qualche elemento
+				dopo di me del linguaggio giusto OR - c'è qualche elemento prima di me che
+				è del linguaggio di default OR - io non sono del linguaggio di default AND
+				- c'è qualche elemento dopo di me del linguaggio di default OR - c'è qualche
 				elemento prima di me -->
 			<xsl:when
 				test="
